@@ -1,0 +1,387 @@
+// prisma/schema.prisma
+// ClubHub - Full Phase 1 Database Schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────────────────────
+// ENUMS
+// ─────────────────────────────────────────
+
+enum Role {
+  student
+  member
+  secretary
+  event_manager
+  club_admin
+  super_admin
+}
+
+enum DegreeType {
+  bachelors
+  masters
+  phd
+  diploma
+}
+
+enum AttendanceStatus {
+  registered
+  present
+  late
+  left_early
+  absent
+  no_show
+}
+
+enum AttendanceMethod {
+  qr
+  pin
+  manual
+  geo
+}
+
+enum ClubStatus {
+  pending
+  approved
+  rejected
+  suspended
+}
+
+enum EventType {
+  workshop
+  seminar
+  hackathon
+  cultural
+  sports
+  webinar
+  meetup
+  competition
+  volunteer
+  other
+}
+
+enum NotificationType {
+  event_reminder
+  event_registration
+  attendance_marked
+  points_awarded
+  club_approved
+  club_announcement
+  system
+}
+
+enum SuggestionStatus {
+  pending
+  under_consideration
+  planned
+  rejected
+}
+
+// ─────────────────────────────────────────
+// USERS
+// ─────────────────────────────────────────
+
+model User {
+  id                   String    @id @default(uuid())
+  email                String    @unique
+  password_hash        String?
+  name                 String
+  department           String?
+  enrollment_year      Int?
+  degree_type          DegreeType?
+  role                 Role      @default(student)
+  is_verified          Boolean   @default(false)
+  is_active            Boolean   @default(true)
+  total_points         Float     @default(0)
+  total_volunteer_hours Float    @default(0)
+  avatar_url           String?
+  
+  // Auth tokens
+  refresh_token_hash   String?
+  email_verify_token   String?
+  email_verify_expires DateTime?
+  reset_token_hash     String?
+  reset_token_expires  DateTime?
+  
+  // OAuth
+  google_id            String?   @unique
+  
+  created_at           DateTime  @default(now())
+  updated_at           DateTime  @updatedAt
+
+  // Relations
+  clubs                UserClub[]
+  event_registrations  EventRegistration[]
+  attendance_logs      AttendanceLog[]
+  notifications        Notification[]
+  created_events       Event[]           @relation("EventCreator")
+  created_clubs        Club[]            @relation("ClubCreator")
+  audit_actions        AuditLog[]        @relation("AuditActor")
+  access_code_uses     AccessCodeUsage[]
+  points_history       PointsHistory[]
+
+  @@map("users")
+}
+
+// ─────────────────────────────────────────
+// CLUBS
+// ─────────────────────────────────────────
+
+model Club {
+  id           String     @id @default(uuid())
+  name         String     @unique
+  slug         String     @unique
+  description  String?
+  category     String
+  logo_url     String?
+  banner_url   String?
+  website      String?
+  instagram    String?
+  linkedin     String?
+  status       ClubStatus @default(pending)
+  member_count Int        @default(0)   // cached counter
+  rejection_reason String?
+  
+  created_by   String
+  creator      User       @relation("ClubCreator", fields: [created_by], references: [id])
+  
+  approved_by  String?
+  approved_at  DateTime?
+  
+  created_at   DateTime   @default(now())
+  updated_at   DateTime   @updatedAt
+
+  // Relations
+  members      UserClub[]
+  events       Event[]
+  communities  Community[]
+
+  @@map("clubs")
+}
+
+model UserClub {
+  id         String   @id @default(uuid())
+  user_id    String
+  club_id    String
+  role       Role     @default(member)
+  joined_at  DateTime @default(now())
+  
+  user       User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  club       Club     @relation(fields: [club_id], references: [id], onDelete: Cascade)
+
+  @@unique([user_id, club_id])
+  @@map("user_clubs")
+}
+
+// ─────────────────────────────────────────
+// EVENTS
+// ─────────────────────────────────────────
+
+model Event {
+  id                     String     @id @default(uuid())
+  club_id                String
+  title                  String
+  description            String
+  date                   DateTime
+  end_date               DateTime?
+  venue                  String
+  venue_lat              Float?
+  venue_lng              Float?
+  geo_fence_radius       Float?     // meters
+  capacity               Int
+  registration_count     Int        @default(0)  // cached
+  event_type             EventType  @default(other)
+  points_reward          Float      @default(0)
+  volunteer_hours        Float      @default(0)
+  tags                   String[]   @default([])
+  is_published           Boolean    @default(false)
+  registration_deadline  DateTime?
+  qr_attendance_enabled  Boolean    @default(true)
+  pin_attendance_enabled Boolean    @default(true)
+  geo_attendance_enabled Boolean    @default(false)
+  
+  created_by             String
+  creator                User       @relation("EventCreator", fields: [created_by], references: [id])
+  club                   Club       @relation(fields: [club_id], references: [id], onDelete: Cascade)
+  
+  created_at             DateTime   @default(now())
+  updated_at             DateTime   @updatedAt
+
+  // Relations
+  registrations          EventRegistration[]
+  attendance_logs        AttendanceLog[]
+  qr_codes               EventQrCode[]
+  notifications          Notification[]
+
+  @@map("events")
+}
+
+model EventRegistration {
+  id             String           @id @default(uuid())
+  event_id       String
+  user_id        String
+  status         AttendanceStatus @default(registered)
+  attended       Boolean          @default(false)
+  points_awarded Float            @default(0)
+  hours_awarded  Float            @default(0)
+  registered_at  DateTime         @default(now())
+  
+  event          Event            @relation(fields: [event_id], references: [id], onDelete: Cascade)
+  user           User             @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([event_id, user_id])
+  @@map("event_registrations")
+}
+
+// ─────────────────────────────────────────
+// ATTENDANCE
+// ─────────────────────────────────────────
+
+model AttendanceLog {
+  id          String           @id @default(uuid())
+  event_id    String
+  user_id     String
+  old_status  AttendanceStatus?
+  new_status  AttendanceStatus
+  method      AttendanceMethod
+  changed_by  String
+  metadata    Json?            // extra data: qr_code_id, pin_attempt, lat/lng etc.
+  changed_at  DateTime         @default(now())
+
+  event       Event            @relation(fields: [event_id], references: [id], onDelete: Cascade)
+  user        User             @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@map("attendance_logs")
+}
+
+model EventQrCode {
+  id              String   @id @default(uuid())
+  event_id        String
+  qr_code_id      String   @unique @default(uuid())
+  valid_from      DateTime
+  valid_until     DateTime
+  hmac_signature  String
+  scan_count      Int      @default(0)
+  max_scans       Int?
+  is_active       Boolean  @default(true)
+  created_by      String
+  created_at      DateTime @default(now())
+
+  event           Event    @relation(fields: [event_id], references: [id], onDelete: Cascade)
+
+  @@map("event_qr_codes")
+}
+
+// ─────────────────────────────────────────
+// ACCESS CODES / COMMUNITIES
+// ─────────────────────────────────────────
+
+model Community {
+  id           String   @id @default(uuid())
+  club_id      String
+  name         String
+  tenure_start DateTime
+  tenure_end   DateTime
+  created_by   String
+  created_at   DateTime @default(now())
+
+  club         Club     @relation(fields: [club_id], references: [id], onDelete: Cascade)
+  access_codes CommunityAccessCode[]
+
+  @@map("communities")
+}
+
+model CommunityAccessCode {
+  id             String    @id @default(uuid())
+  community_id   String
+  code_hash      String    @unique
+  assigned_role  Role      @default(member)
+  is_revoked     Boolean   @default(false)
+  usage_count    Int       @default(0)
+  max_uses       Int?
+  revoked_at     DateTime?
+  revoked_by     String?
+  created_at     DateTime  @default(now())
+
+  community      Community @relation(fields: [community_id], references: [id], onDelete: Cascade)
+  usages         AccessCodeUsage[]
+
+  @@map("community_access_codes")
+}
+
+model AccessCodeUsage {
+  id          String   @id @default(uuid())
+  code_id     String
+  user_id     String
+  used_at     DateTime @default(now())
+  club_role   Role
+
+  code        CommunityAccessCode @relation(fields: [code_id], references: [id])
+  user        User                @relation(fields: [user_id], references: [id])
+
+  @@map("access_code_usages")
+}
+
+// ─────────────────────────────────────────
+// NOTIFICATIONS
+// ─────────────────────────────────────────
+
+model Notification {
+  id         String           @id @default(uuid())
+  user_id    String
+  event_id   String?
+  title      String
+  body       String
+  type       NotificationType @default(system)
+  is_read    Boolean          @default(false)
+  created_at DateTime         @default(now())
+
+  user       User             @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  event      Event?           @relation(fields: [event_id], references: [id], onDelete: SetNull)
+
+  @@map("notifications")
+}
+
+// ─────────────────────────────────────────
+// POINTS HISTORY
+// ─────────────────────────────────────────
+
+model PointsHistory {
+  id          String   @id @default(uuid())
+  user_id     String
+  event_id    String?
+  points      Float
+  hours       Float    @default(0)
+  reason      String
+  multiplier  Float    @default(1.0)
+  created_at  DateTime @default(now())
+
+  user        User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@map("points_history")
+}
+
+// ─────────────────────────────────────────
+// AUDIT LOG
+// ─────────────────────────────────────────
+
+model AuditLog {
+  id          String   @id @default(uuid())
+  action      String
+  actor_id    String
+  target_type String
+  target_id   String?
+  metadata    Json?
+  ip_address  String?
+  created_at  DateTime @default(now())
+
+  actor       User     @relation("AuditActor", fields: [actor_id], references: [id])
+
+  @@map("audit_log")
+}
