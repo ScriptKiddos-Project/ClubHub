@@ -1,4 +1,4 @@
-// server/src/types/index.ts
+// src/types/index.ts
 import {
   Role,
   ClubMemberRole,
@@ -25,6 +25,15 @@ export {
 };
 
 // ── Auth ──────────────────────────────────────────────────────────────────────
+
+export interface JwtPayload {
+  userId: string;
+  email:  string;
+  role:   Role;
+  type:   'access' | 'refresh';
+  iat?:   number;
+  exp?:   number;
+}
 
 export interface AuthenticatedUser {
   id:    string;
@@ -262,7 +271,7 @@ export interface StudentDashboard {
 export interface QRCodePayload {
   eventId:    string;
   qrCodeId:   string;
-  validFrom:  number;   // Unix timestamp
+  validFrom:  number;
   validUntil: number;
   version:    number;
 }

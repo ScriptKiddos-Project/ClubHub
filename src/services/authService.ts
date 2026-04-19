@@ -5,19 +5,17 @@ import { signAccessToken, signRefreshToken, verifyRefreshToken } from '../utils/
 import {
   generateSecureToken,
   addMinutes,
-  addDays,
-  isExpired,
   hashSha256,
   generateAccessCode,
+  formatDate,
 } from '../utils/dateUtils';
 import {
   sendVerificationEmail,
   sendPasswordResetEmail,
   sendWelcomeCoreEmail,
 } from './emailService';
-import { createError } from '../middleware/errorHandler';
-import { Role } from '@prisma/client';
-import { formatDate } from '../utils/dateUtils';
+import { AppError } from '../utils/AppError';
+import { ClubMemberRole, Role } from '@prisma/client';
 
 // ─── Register ─────────────────────────────────────────────────────────────────
 
@@ -30,7 +28,7 @@ export async function registerUser(data: {
   degree_type?: string;
 }) {
   const existing = await prisma.user.findUnique({ where: { email: data.email } });
-  if (existing) throw createError('Email already registered', 409, 'EMAIL_TAKEN');
+  if (existing) throw new AppError('Email already registered', 409, 'EMAIL_TAKEN');
 
   const password_hash = await hashPassword(data.password);
   const verifyToken = generateSecureToken();
@@ -50,8 +48,7 @@ export async function registerUser(data: {
     select: { id: true, email: true, name: true, role: true, is_verified: true },
   });
 
-  // Send verification email (direct for registration — queue not yet set up)
-  await sendVerificationEmail(user.email, user.name, verifyToken);
+  await sendVerificationEmail({ to: user.email, userName: user.name, token: verifyToken });
 
   return user;
 }
@@ -66,8 +63,8 @@ export async function verifyEmail(token: string) {
     },
   });
 
-  if (!user) throw createError('Invalid or expired verification token', 400, 'INVALID_TOKEN');
-  if (user.is_verified) throw createError('Email already verified', 400, 'ALREADY_VERIFIED');
+  if (!user) throw new AppError('Invalid or expired verification token', 400, 'INVALID_TOKEN');
+  if (user.is_verified) throw new AppError('Email already verified', 400, 'ALREADY_VERIFIED');
 
   await prisma.user.update({
     where: { id: user.id },
@@ -87,26 +84,24 @@ export async function loginUser(email: string, password: string) {
   const user = await prisma.user.findUnique({ where: { email } });
 
   if (!user || !user.password_hash) {
-    throw createError('Invalid email or password', 401, 'INVALID_CREDENTIALS');
+    throw new AppError('Invalid email or password', 401, 'INVALID_CREDENTIALS');
   }
 
   const isMatch = await comparePassword(password, user.password_hash);
-  if (!isMatch) throw createError('Invalid email or password', 401, 'INVALID_CREDENTIALS');
+  if (!isMatch) throw new AppError('Invalid email or password', 401, 'INVALID_CREDENTIALS');
 
-  if (!user.is_verified) throw createError('Please verify your email first', 403, 'EMAIL_NOT_VERIFIED');
-  if (!user.is_active) throw createError('Account is suspended', 403, 'ACCOUNT_SUSPENDED');
+  if (!user.is_verified) throw new AppError('Please verify your email first', 403, 'EMAIL_NOT_VERIFIED');
+  if (!user.is_active) throw new AppError('Account is suspended', 403, 'ACCOUNT_SUSPENDED');
 
   const accessToken = signAccessToken({ userId: user.id, email: user.email, role: user.role });
   const refreshToken = signRefreshToken({ userId: user.id, email: user.email, role: user.role });
 
-  // Store hashed refresh token
   const refreshTokenHash = await hashToken(refreshToken);
   await prisma.user.update({
     where: { id: user.id },
     data: { refresh_token_hash: refreshTokenHash },
   });
 
-  // Audit log
   await prisma.auditLog.create({
     data: {
       action: 'USER_LOGIN',
@@ -138,18 +133,17 @@ export async function refreshTokens(refreshToken: string) {
   try {
     payload = verifyRefreshToken(refreshToken);
   } catch {
-    throw createError('Invalid refresh token', 401, 'INVALID_TOKEN');
+    throw new AppError('Invalid refresh token', 401, 'INVALID_TOKEN');
   }
 
-  if (payload.type !== 'refresh') throw createError('Invalid token type', 401, 'INVALID_TOKEN');
+  if (payload.type !== 'refresh') throw new AppError('Invalid token type', 401, 'INVALID_TOKEN');
 
   const user = await prisma.user.findUnique({ where: { id: payload.userId } });
-  if (!user || !user.refresh_token_hash) throw createError('Session not found', 401, 'SESSION_NOT_FOUND');
+  if (!user || !user.refresh_token_hash) throw new AppError('Session not found', 401, 'SESSION_NOT_FOUND');
 
   const isValid = await compareToken(refreshToken, user.refresh_token_hash);
-  if (!isValid) throw createError('Refresh token mismatch', 401, 'INVALID_TOKEN');
+  if (!isValid) throw new AppError('Refresh token mismatch', 401, 'INVALID_TOKEN');
 
-  // Rotate tokens
   const newAccessToken = signAccessToken({ userId: user.id, email: user.email, role: user.role });
   const newRefreshToken = signRefreshToken({ userId: user.id, email: user.email, role: user.role });
 
@@ -191,7 +185,7 @@ export async function forgotPassword(email: string) {
     },
   });
 
-  await sendPasswordResetEmail(user.email, user.name, resetToken);
+  await sendPasswordResetEmail({ to: user.email, userName: user.name, token: resetToken });
 
   return { message: 'If that email exists, a reset link has been sent.' };
 }
@@ -208,7 +202,7 @@ export async function resetPassword(token: string, newPassword: string) {
     },
   });
 
-  if (!user) throw createError('Invalid or expired reset token', 400, 'INVALID_TOKEN');
+  if (!user) throw new AppError('Invalid or expired reset token', 400, 'INVALID_TOKEN');
 
   const password_hash = await hashPassword(newPassword);
 
@@ -218,7 +212,7 @@ export async function resetPassword(token: string, newPassword: string) {
       password_hash,
       reset_token_hash: null,
       reset_token_expires: null,
-      refresh_token_hash: null, // Invalidate all sessions
+      refresh_token_hash: null,
     },
   });
 
@@ -233,18 +227,16 @@ export async function coreJoin(data: {
   club_id: string;
   access_code: string;
 }) {
-  // Find user
   const user = await prisma.user.findUnique({ where: { email: data.email } });
-  if (!user) throw createError('No account found with this email. Please register first.', 404, 'USER_NOT_FOUND');
-  if (!user.is_verified) throw createError('Please verify your email before joining.', 403, 'EMAIL_NOT_VERIFIED');
+  if (!user) throw new AppError('No account found with this email. Please register first.', 404, 'USER_NOT_FOUND');
+  if (!user.is_verified) throw new AppError('Please verify your email before joining.', 403, 'EMAIL_NOT_VERIFIED');
 
-  // Find the club
+  // Club.status is ClubStatus enum: pending | approved | rejected | suspended
   const club = await prisma.club.findFirst({
     where: { id: data.club_id, status: 'approved' },
   });
-  if (!club) throw createError('Club not found', 404, 'CLUB_NOT_FOUND');
+  if (!club) throw new AppError('Club not found', 404, 'CLUB_NOT_FOUND');
 
-  // Hash the submitted code and look up
   const codeHash = hashSha256(data.access_code);
 
   const accessCode = await prisma.communityAccessCode.findFirst({
@@ -256,65 +248,68 @@ export async function coreJoin(data: {
     include: { community: true },
   });
 
-  if (!accessCode) throw createError('Invalid or revoked access code', 400, 'INVALID_CODE');
+  if (!accessCode) throw new AppError('Invalid or revoked access code', 400, 'INVALID_CODE');
 
-  // Validate tenure window
   const now = new Date();
   if (now < accessCode.community.tenure_start) {
-    throw createError('Tenure period has not started yet', 400, 'TENURE_NOT_STARTED');
+    throw new AppError('Tenure period has not started yet', 400, 'TENURE_NOT_STARTED');
   }
   if (now > accessCode.community.tenure_end) {
-    throw createError('This access code has expired (tenure ended)', 400, 'TENURE_ENDED');
+    throw new AppError('This access code has expired (tenure ended)', 400, 'TENURE_ENDED');
   }
 
-  // Check max uses
   if (accessCode.max_uses && accessCode.usage_count >= accessCode.max_uses) {
-    throw createError('This access code has reached its maximum usage limit', 400, 'CODE_MAXED');
+    throw new AppError('This access code has reached its maximum usage limit', 400, 'CODE_MAXED');
   }
 
-  // Check if user already used this code
   const alreadyUsed = await prisma.accessCodeUsage.findFirst({
     where: { code_id: accessCode.id, user_id: user.id },
   });
-  if (alreadyUsed) throw createError('You have already used this access code', 409, 'ALREADY_USED');
+  if (alreadyUsed) throw new AppError('You have already used this access code', 409, 'ALREADY_USED');
 
-  const assignedRole = accessCode.assigned_role;
+  // assigned_role is a single ClubMemberRole: member | secretary | event_manager
+  const assignedRole: ClubMemberRole = accessCode.assigned_role;
 
-  // Upsert user_clubs with new role
   await prisma.userClub.upsert({
     where: { user_id_club_id: { user_id: user.id, club_id: data.club_id } },
     update: { role: assignedRole },
-    create: {
-      user_id: user.id,
-      club_id: data.club_id,
-      role: assignedRole,
-    },
+    create: { user_id: user.id, club_id: data.club_id, role: assignedRole },
   });
 
-  // Update user's global role if it's higher
-  const roleHierarchy: Record<Role, number> = {
-    student: 0, member: 1, secretary: 2, event_manager: 2, club_admin: 3, super_admin: 4,
+  // Map ClubMemberRole → global Role for user-level upgrade
+  const clubRoleToGlobalRole: Record<ClubMemberRole, Role> = {
+    member: 'member',
+    secretary: 'secretary',
+    event_manager: 'event_manager',
   };
 
-  if (roleHierarchy[assignedRole] > roleHierarchy[user.role]) {
+  const roleHierarchy: Record<Role, number> = {
+    student: 0,
+    member: 1,
+    secretary: 2,
+    event_manager: 2,
+    club_admin: 3,
+    super_admin: 4,
+  };
+
+  const targetGlobalRole = clubRoleToGlobalRole[assignedRole];
+  if (roleHierarchy[targetGlobalRole] > roleHierarchy[user.role]) {
     await prisma.user.update({
       where: { id: user.id },
-      data: { role: assignedRole },
+      data: { role: targetGlobalRole },
     });
   }
 
-  // Log code usage
+  // AccessCodeUsage schema: id, code_id, user_id, used_at — nothing else
   await prisma.accessCodeUsage.create({
-    data: { code_id: accessCode.id, user_id: user.id, club_role: assignedRole },
+    data: { code_id: accessCode.id, user_id: user.id },
   });
 
-  // Increment usage count
   await prisma.communityAccessCode.update({
     where: { id: accessCode.id },
     data: { usage_count: { increment: 1 } },
   });
 
-  // Audit log
   await prisma.auditLog.create({
     data: {
       action: 'CORE_JOIN',
@@ -325,15 +320,14 @@ export async function coreJoin(data: {
     },
   });
 
-  // Send welcome email
-  await sendWelcomeCoreEmail(
-    user.email,
-    user.name,
-    club.name,
-    assignedRole,
-    formatDate(accessCode.community.tenure_start),
-    formatDate(accessCode.community.tenure_end)
-  );
+  await sendWelcomeCoreEmail({
+    to: user.email,
+    userName: user.name,
+    clubName: club.name,
+    role: assignedRole,
+    tenureStart: formatDate(accessCode.community.tenure_start),
+    tenureEnd: formatDate(accessCode.community.tenure_end),
+  });
 
   return {
     message: 'Successfully joined as core member',
@@ -352,7 +346,7 @@ export async function createCommunity(data: {
   created_by: string;
 }) {
   const club = await prisma.club.findUnique({ where: { id: data.club_id } });
-  if (!club) throw createError('Club not found', 404, 'CLUB_NOT_FOUND');
+  if (!club) throw new AppError('Club not found', 404, 'CLUB_NOT_FOUND');
 
   const community = await prisma.community.create({
     data: {
@@ -370,16 +364,17 @@ export async function createCommunity(data: {
 
 export async function generateCode(data: {
   community_id: string;
-  assigned_role: Role;
+  assigned_role: ClubMemberRole;
   max_uses?: number;
   created_by: string;
 }) {
-  const community = await prisma.community.findUnique({ where: { id: data.community_id } });
-  if (!community) throw createError('Community not found', 404, 'NOT_FOUND');
+  const community = await prisma.community.findUnique({
+    where: { id: data.community_id },
+    include: { club: { select: { slug: true } } },
+  });
+  if (!community) throw new AppError('Community not found', 404, 'NOT_FOUND');
 
-  // Get club slug for prefix
-  const club = await prisma.club.findUnique({ where: { id: community.club_id } });
-  const plainCode = generateAccessCode(club?.slug || 'CLUB');
+  const plainCode = generateAccessCode(community.club.slug);
   const codeHash = hashSha256(plainCode);
 
   await prisma.communityAccessCode.create({
@@ -391,7 +386,6 @@ export async function generateCode(data: {
     },
   });
 
-  // Audit
   await prisma.auditLog.create({
     data: {
       action: 'CODE_GENERATED',
@@ -402,18 +396,31 @@ export async function generateCode(data: {
     },
   });
 
-  // Return plaintext ONCE — not stored
   return { code: plainCode, message: 'Store this code securely — it will not be shown again.' };
 }
 
 export async function revokeCode(codeId: string, revokedBy: string) {
   const code = await prisma.communityAccessCode.findUnique({ where: { id: codeId } });
-  if (!code) throw createError('Access code not found', 404, 'NOT_FOUND');
-  if (code.is_revoked) throw createError('Code already revoked', 400, 'ALREADY_REVOKED');
+  if (!code) throw new AppError('Access code not found', 404, 'NOT_FOUND');
+  if (code.is_revoked) throw new AppError('Code already revoked', 400, 'ALREADY_REVOKED');
 
+  // revoked_at and revoked_by exist in the real schema
   await prisma.communityAccessCode.update({
     where: { id: codeId },
-    data: { is_revoked: true, revoked_at: new Date(), revoked_by: revokedBy },
+    data: {
+      is_revoked: true,
+      revoked_at: new Date(),
+      revoked_by: revokedBy,
+    },
+  });
+
+  await prisma.auditLog.create({
+    data: {
+      action: 'CODE_REVOKED',
+      actor_id: revokedBy,
+      target_type: 'access_code',
+      target_id: codeId,
+    },
   });
 
   return { message: 'Access code revoked successfully' };

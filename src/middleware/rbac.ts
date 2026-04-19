@@ -44,6 +44,7 @@ export function hasRole(userRole: Role, ...allowedRoles: Role[]): boolean {
  */
 const ROLE_HIERARCHY: Record<Role, number> = {
   student: 0,
+  member: 1,
   secretary: 1,
   event_manager: 1,
   club_admin: 2,

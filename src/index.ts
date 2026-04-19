@@ -9,8 +9,8 @@ import morgan from 'morgan';
 
 import routes from './routes/index';
 import { notFoundHandler, errorHandler } from './middleware/errorHandler';
-import { generalLimiter } from './middleware/rateLimiter';
-import { connectDatabase } from './config/database';
+import { generalRateLimiter } from './middleware/rateLimiter';
+import prisma from './config/database';
 import { connectRedis } from './config/redis';
 
 const app = express();
@@ -73,7 +73,7 @@ if (process.env.NODE_ENV !== 'test') {
 }
 
 // ── Global Rate Limiter ────────────────────────────────────────────────────────
-app.use(generalLimiter);
+app.use(generalRateLimiter);
 
 // ── Trust Proxy (Railway/Vercel) ───────────────────────────────────────────────
 app.set('trust proxy', 1);
@@ -90,7 +90,9 @@ app.use(errorHandler);
 // ── Bootstrap ──────────────────────────────────────────────────────────────────
 async function bootstrap() {
   try {
-    await connectDatabase();
+    await prisma.$connect();
+    console.log('✅ Database connected');
+
     await connectRedis();
 
     app.listen(PORT, () => {
@@ -100,6 +102,7 @@ async function bootstrap() {
     });
   } catch (error) {
     console.error('❌ Failed to start server:', error);
+    await prisma.$disconnect();
     process.exit(1);
   }
 }
@@ -107,11 +110,13 @@ async function bootstrap() {
 // ── Graceful Shutdown ──────────────────────────────────────────────────────────
 process.on('SIGTERM', async () => {
   console.log('SIGTERM received — shutting down gracefully');
+  await prisma.$disconnect();
   process.exit(0);
 });
 
 process.on('SIGINT', async () => {
   console.log('SIGINT received — shutting down gracefully');
+  await prisma.$disconnect();
   process.exit(0);
 });
 

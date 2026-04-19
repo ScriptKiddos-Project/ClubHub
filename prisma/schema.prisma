@@ -231,7 +231,7 @@ model Event {
   registrations          EventRegistration[]
   attendance_logs        AttendanceLog[]
   qr_codes               EventQrCode[]
-  notifications          Notification[]
+  
 
   @@index([club_id])
   @@index([date])
