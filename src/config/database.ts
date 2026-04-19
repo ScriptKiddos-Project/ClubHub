@@ -1,23 +1,24 @@
-// src/config/database.ts
-import { PrismaClient } from '@prisma/client';
+// server/src/config/database.ts
+// Prisma client singleton — prevents multiple instances in development (hot reload).
 
-const prisma = new PrismaClient({
-  log: process.env.NODE_ENV === 'development' ? ['query', 'info', 'warn', 'error'] : ['error'],
-});
+import { PrismaClient } from "@prisma/client";
+
+declare global {
+  // eslint-disable-next-line no-var
+  var __prisma: PrismaClient | undefined;
+}
+
+const prisma: PrismaClient =
+  global.__prisma ??
+  new PrismaClient({
+    log:
+      process.env.NODE_ENV === "development"
+        ? ["query", "info", "warn", "error"]
+        : ["warn", "error"],
+  });
+
+if (process.env.NODE_ENV !== "production") {
+  global.__prisma = prisma;
+}
 
 export default prisma;
-
-export async function connectDatabase(): Promise<void> {
-  try {
-    await prisma.$connect();
-    console.log('✅ Database connected successfully');
-  } catch (error) {
-    console.error('❌ Database connection failed:', error);
-    process.exit(1);
-  }
-}
-
-export async function disconnectDatabase(): Promise<void> {
-  await prisma.$disconnect();
-  console.log('🔌 Database disconnected');
-}

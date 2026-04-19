@@ -1,39 +1,50 @@
-// src/middleware/auth.ts
-import { Request, Response, NextFunction } from 'express';
-import { verifyAccessToken } from '../utils/jwt';
-import { sendError } from '../utils/response';
+// server/src/middleware/auth.ts
+import { Request, Response, NextFunction } from "express";
+import jwt from "jsonwebtoken";
+import { sendError } from "../utils/response";
+import { AuthenticatedUser } from "../types";
 
-export function authenticate(req: Request, res: Response, next: NextFunction): void {
+// Must be set — missing secret is a fatal misconfiguration, not a fallback
+const JWT_ACCESS_SECRET = process.env.JWT_ACCESS_SECRET;
+if (!JWT_ACCESS_SECRET) {
+  throw new Error("JWT_ACCESS_SECRET environment variable is not set");
+}
+
+export const authenticate = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): void => {
+  const authHeader = req.headers.authorization;
+
+  if (!authHeader?.startsWith("Bearer ")) {
+    sendError(res, 401, "UNAUTHORIZED", "Authentication required");
+    return;
+  }
+
+  const token = authHeader.slice(7);
+
   try {
-    const authHeader = req.headers.authorization;
-    const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null;
+    const payload = jwt.verify(token, JWT_ACCESS_SECRET) as AuthenticatedUser & {
+      iat: number;
+      exp: number;
+    };
 
-    if (!token) {
-      sendError(res, 401, 'UNAUTHORIZED', 'Authentication token is required');
-      return;
-    }
-
-    const payload = verifyAccessToken(token);
-
-    if (payload.type !== 'access') {
-      sendError(res, 401, 'INVALID_TOKEN', 'Invalid token type');
-      return;
-    }
-
+    // Explicitly extract — don't leak iat/exp/other claims into req.user
     req.user = {
-      id: payload.userId,
+      id: payload.id,
       email: payload.email,
-      name: '',
       role: payload.role,
-      is_verified: true,
+      name: payload.name,
     };
 
     next();
-  } catch (error) {
-    if (error instanceof Error && error.name === 'TokenExpiredError') {
-      sendError(res, 401, 'TOKEN_EXPIRED', 'Access token has expired');
-    } else {
-      sendError(res, 401, 'INVALID_TOKEN', 'Invalid access token');
+  } catch (err: any) {
+    // Distinguish expired vs invalid — frontend Axios interceptor depends on this
+    if (err.name === "TokenExpiredError") {
+      sendError(res, 401, "TOKEN_EXPIRED", "Access token has expired");
+      return;
     }
+    sendError(res, 401, "TOKEN_INVALID", "Invalid access token");
   }
-}
+};

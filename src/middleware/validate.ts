@@ -1,26 +1,32 @@
-// src/middleware/validate.ts
-import { Request, Response, NextFunction } from 'express';
-import { ZodSchema, ZodError } from 'zod';
-import { sendError } from '../utils/response';
+// server/src/middleware/validate.ts
+import { Request, Response, NextFunction } from "express";
+import { AnyZodObject, ZodError } from "zod";
+import { sendError } from "../utils/response";
 
-type ValidationTarget = 'body' | 'query' | 'params';
+export const validate =
+  (schema: AnyZodObject) =>
+  async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const parsed = await schema.parseAsync({
+        body: req.body,
+        params: req.params,
+        query: req.query,
+      });
 
-export function validate(schema: ZodSchema, target: ValidationTarget = 'body') {
-  return (req: Request, res: Response, next: NextFunction): void => {
-    const result = schema.safeParse(req[target]);
+      if (parsed.body !== undefined) req.body = parsed.body;
+      if (parsed.params !== undefined) req.params = parsed.params;
+      if (parsed.query !== undefined) req.query = parsed.query;
 
-    if (!result.success) {
-      const details = (result.error as ZodError).errors.map((e) => ({
-        field: e.path.join('.'),
-        message: e.message,
-      }));
-
-      sendError(res, 422, 'VALIDATION_ERROR', 'Invalid input data', details);
-      return;
+      next();
+    } catch (err) {
+      if (err instanceof ZodError) {
+        const details = err.errors.map((e) => ({
+          field: e.path.join("."),
+          message: e.message,
+        }));
+        sendError(res, 422, "VALIDATION_ERROR", "Input validation failed", details);
+        return;
+      }
+      next(err);
     }
-
-    // Replace request data with parsed/coerced data
-    (req as any)[target] = result.data;
-    next();
   };
-}

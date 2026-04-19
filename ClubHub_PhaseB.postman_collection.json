@@ -1,0 +1,248 @@
+{
+  "info": {
+    "name": "ClubHub — Phase 1B: Clubs, Events & Registration",
+    "description": "Complete Postman collection for Phase 1B backend. Import and set {{base_url}} to http://localhost:4000. After login, copy the accessToken into the Authorization header as Bearer {{token}}.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://localhost:4000" },
+    { "key": "token", "value": "PASTE_ACCESS_TOKEN_HERE" },
+    { "key": "club_id", "value": "" },
+    { "key": "event_id", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "GET /api/health",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/health"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Clubs",
+      "item": [
+        {
+          "name": "List approved clubs",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{base_url}}/api/v1/clubs?page=1&limit=10",
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "10" },
+                { "key": "category", "value": "technical", "disabled": true },
+                { "key": "search", "value": "code", "disabled": true }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get club by ID",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{base_url}}/api/v1/clubs/{{club_id}}"
+          }
+        },
+        {
+          "name": "Create club (pending approval)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Debate Society\",\n  \"slug\": \"debate-society\",\n  \"description\": \"A club for passionate debaters and public speakers.\",\n  \"category\": \"academic\",\n  \"website_url\": \"\",\n  \"instagram_url\": \"\"\n}"
+            },
+            "url": "{{base_url}}/api/v1/clubs"
+          }
+        },
+        {
+          "name": "Join club",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{base_url}}/api/v1/clubs/{{club_id}}/join"
+          }
+        },
+        {
+          "name": "Leave club",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{base_url}}/api/v1/clubs/{{club_id}}/leave"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin — Clubs",
+      "item": [
+        {
+          "name": "List pending clubs (Super Admin)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{base_url}}/api/v1/admin/clubs/pending"
+          }
+        },
+        {
+          "name": "Approve club (Super Admin)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"approved\": true\n}"
+            },
+            "url": "{{base_url}}/api/v1/admin/clubs/{{club_id}}/approve"
+          }
+        },
+        {
+          "name": "Reject club (Super Admin)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"approved\": false,\n  \"reason\": \"Insufficient description provided. Please resubmit with detailed goals.\"\n}"
+            },
+            "url": "{{base_url}}/api/v1/admin/clubs/{{club_id}}/approve"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Events",
+      "item": [
+        {
+          "name": "List events (published)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{base_url}}/api/v1/events?limit=10&is_published=true",
+              "query": [
+                { "key": "limit", "value": "10" },
+                { "key": "is_published", "value": "true" },
+                { "key": "club_id", "value": "", "disabled": true },
+                { "key": "type", "value": "workshop", "disabled": true },
+                { "key": "is_free", "value": "true", "disabled": true },
+                { "key": "tags", "value": "coding,hackathon", "disabled": true },
+                { "key": "cursor", "value": "", "disabled": true }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get event by ID",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{base_url}}/api/v1/events/{{event_id}}"
+          }
+        },
+        {
+          "name": "Create event (Event Manager)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"club_id\": \"{{club_id}}\",\n  \"title\": \"Node.js Advanced Patterns Workshop\",\n  \"description\": \"Deep dive into Node.js advanced patterns including streams, worker threads, clustering and performance optimization. Hands-on exercises included.\",\n  \"date\": \"2025-06-20T10:00:00.000Z\",\n  \"end_date\": \"2025-06-20T13:00:00.000Z\",\n  \"venue\": \"Lab 301, CS Block\",\n  \"capacity\": 50,\n  \"registration_deadline\": \"2025-06-19T23:59:00.000Z\",\n  \"event_type\": \"workshop\",\n  \"is_published\": true,\n  \"points_reward\": 30,\n  \"volunteer_hours\": 3,\n  \"tags\": [\"nodejs\", \"backend\", \"workshop\"],\n  \"is_free\": true,\n  \"qr_attendance_enabled\": true,\n  \"pin_attendance_enabled\": false\n}"
+            },
+            "url": "{{base_url}}/api/v1/events"
+          }
+        },
+        {
+          "name": "Update event",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"capacity\": 60,\n  \"is_published\": true,\n  \"tags\": [\"nodejs\", \"backend\", \"workshop\", \"advanced\"]\n}"
+            },
+            "url": "{{base_url}}/api/v1/events/{{event_id}}"
+          }
+        },
+        {
+          "name": "Delete event",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{base_url}}/api/v1/events/{{event_id}}"
+          }
+        },
+        {
+          "name": "Calendar events",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{base_url}}/api/v1/events/calendar?start=2025-06-01T00:00:00.000Z&end=2025-06-30T23:59:59.000Z",
+              "query": [
+                { "key": "start", "value": "2025-06-01T00:00:00.000Z" },
+                { "key": "end", "value": "2025-06-30T23:59:59.000Z" }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Event Registration",
+      "item": [
+        {
+          "name": "Register for event",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{base_url}}/api/v1/events/{{event_id}}/register"
+          }
+        },
+        {
+          "name": "Unregister from event",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{base_url}}/api/v1/events/{{event_id}}/register"
+          }
+        }
+      ]
+    },
+    {
+      "name": "User",
+      "item": [
+        {
+          "name": "Student dashboard",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{base_url}}/api/v1/users/me/dashboard"
+          }
+        }
+      ]
+    }
+  ]
+}
