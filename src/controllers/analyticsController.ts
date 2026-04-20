@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import * as analyticsService from '../services/analyticsService';
+import { AuthenticatedUser } from '../types';
 
 export const getGlobalAnalytics = async (
   req: Request,
@@ -34,7 +35,11 @@ export const getStudentStats = async (
   next: NextFunction,
 ): Promise<void> => {
   try {
-    const user = (req as any).user;
+    const user = req.user as AuthenticatedUser | undefined;
+    if (!user) {
+      next(new Error('User not authenticated'));
+      return;
+    }
     const data = await analyticsService.getStudentStats(user.id);
     res.json({ success: true, data });
   } catch (err) {

@@ -1,6 +1,12 @@
 // src/config/email.ts
 import nodemailer from 'nodemailer';
-import { EmailPayload } from '../types';
+
+export interface EmailPayload {
+  to: string;
+  subject: string;
+  html: string;
+  text?: string;
+}
 
 // HTML Email Templates
 const emailTemplates = {

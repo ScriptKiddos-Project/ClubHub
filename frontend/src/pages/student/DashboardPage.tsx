@@ -47,7 +47,7 @@ const DashboardPage: React.FC = () => {
   );
 
   const pointsToGold = 3000;
-  const currentPoints = user?.totalPoints ?? 2450;
+  const currentPoints = user?.total_points ?? 2450;
   const streakDays = user?.streak ?? 12;
 
   return (

@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { authenticate } from '../middleware/auth';
-import { notificationLimiter } from '../middleware/rateLimiter';
+import { notificationRateLimiter } from '../middleware/rateLimiter';
 import {
   getNotifications,
   markAsRead,
@@ -12,7 +12,7 @@ const router = Router();
 
 // All notification routes require authentication
 router.use(authenticate);
-router.use(notificationLimiter);
+router.use(notificationRateLimiter);
 
 // GET /api/v1/notifications?page=1&limit=20
 router.get('/', getNotifications);

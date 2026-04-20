@@ -62,13 +62,16 @@ export async function listEvents(
   }
 
   // Cursor-based pagination
-  const cursorClause = cursor ? { cursor: { id: cursor }, skip: 1 } : {};
+  const cursorClause = cursor
+    ? { cursor: { id: cursor } as { id: string }, skip: 1 as number }
+    : { cursor: undefined, skip: undefined };
 
   const events = await prisma.event.findMany({
     where,
     take: limit + 1, // fetch one extra to determine has_more
     orderBy: { date: "asc" },
-    ...cursorClause,
+    cursor: cursorClause.cursor,
+    skip: cursorClause.skip,
     include: {
       club: { select: { name: true, logo_url: true } },
     },
@@ -186,7 +189,7 @@ export async function createEvent(
   // Verify club exists and is approved
   const club = await prisma.club.findUnique({ where: { id: input.club_id } });
   if (!club) throw new AppError("Club not found", 404, "CLUB_NOT_FOUND");
-  if (!club.is_approved)
+  if (club.status !== 'approved')
     throw new AppError("Cannot create events for an unapproved club", 400, "CLUB_NOT_APPROVED");
 
   // Validate dates
@@ -345,8 +348,6 @@ export async function deleteEvent(
         to: reg.user.email,
         userName: reg.user.name,
         eventTitle: event.title,
-        eventDate: event.date,
-        eventVenue: event.venue,
       }).catch(() => {}) // swallow individual email errors
     );
     // Fire and forget — don't await in request cycle
@@ -361,7 +362,10 @@ export async function registerForEvent(
   eventId: string,
   userId: string
 ): Promise<{ message: string; registration_id: string }> {
-  const event = await prisma.event.findUnique({ where: { id: eventId } });
+  const event = await prisma.event.findUnique({
+    where: { id: eventId },
+    include: { club: { select: { name: true } } },
+  });
   if (!event) throw new AppError("Event not found", 404, "EVENT_NOT_FOUND");
   if (!event.is_published)
     throw new AppError("This event is not open for registration", 400, "EVENT_NOT_PUBLISHED");
@@ -416,6 +420,7 @@ export async function registerForEvent(
       eventTitle: event.title,
       eventDate: event.date,
       eventVenue: event.venue,
+      clubName: event.club.name,
       eventId: event.id,
     }).catch(() => {}); // fire-and-forget
   }
@@ -546,7 +551,7 @@ export async function getStudentDashboard(userId: string): Promise<StudentDashbo
             category: true,
             logo_url: true,
             member_count: true,
-            is_approved: true,
+            status: true,
             description: true,
           },
         },
@@ -604,7 +609,7 @@ export async function getStudentDashboard(userId: string): Promise<StudentDashbo
 
   return {
     user,
-    my_clubs: userClubs.map((uc) => uc.club),
+    my_clubs: userClubs.map((uc) => (uc as any).club),
     upcoming_events: upcomingEvents,
     stats: {
       clubs_joined: userClubs.length,

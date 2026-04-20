@@ -7,12 +7,11 @@ import { rbac } from "../middleware/rbac";
 import { validate } from "../middleware/validate";
 import { approveClubSchema } from "../validators/club.validator";
 import * as clubController from "../controllers/clubController";
-import * as eventController from "../controllers/eventController";
 
 const router = Router();
 
 // All admin routes require authentication + super_admin role
-router.use(authenticate, rbac(["super_admin"]));
+router.use(authenticate, rbac("super_admin"));
 
 // ─── Club Approval ────────────────────────────────────────────────────────────
 // GET /api/v1/admin/clubs/pending

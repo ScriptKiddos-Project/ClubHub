@@ -1,26 +1,18 @@
 import { Request, Response, NextFunction } from 'express';
-import { AppError } from './errorHandler';
+import { AppError } from '../utils/AppError';
+import { AuthenticatedUser } from '../types';
 
-/**
- * Ensures the authenticated user can only access their own resources.
- * Compares req.user.id against a param or body field.
- *
- * Usage:
- *   router.get('/users/:userId/stats', auth, ownsResource('userId'), controller)
- *   router.patch('/profile', auth, ownsResource('id', 'body'), controller)
- */
 export const ownsResource = (
   field: string,
   source: 'params' | 'body' = 'params',
 ) => {
   return (req: Request, res: Response, next: NextFunction): void => {
-    const user = (req as any).user;
+    const user = req.user as AuthenticatedUser | undefined;
 
     if (!user) {
-      throw new AppError('UNAUTHORIZED', 'Authentication required', 401);
+      throw new AppError('Authentication required', 401, 'UNAUTHORIZED');
     }
 
-    // Super admins bypass ownership checks
     if (user.role === 'super_admin') {
       next();
       return;
@@ -30,14 +22,14 @@ export const ownsResource = (
       source === 'params' ? req.params[field] : req.body[field];
 
     if (!resourceId) {
-      throw new AppError('BAD_REQUEST', `Missing field: ${field}`, 400);
+      throw new AppError(`Missing field: ${field}`, 400, 'BAD_REQUEST');
     }
 
     if (user.id !== resourceId) {
       throw new AppError(
-        'FORBIDDEN',
         'You do not have permission to access this resource',
         403,
+        'FORBIDDEN',
       );
     }
 
@@ -45,17 +37,12 @@ export const ownsResource = (
   };
 };
 
-/**
- * Ensures the authenticated user belongs to the club they are acting on.
- * Reads clubId from req.params.id or req.params.clubId.
- * Relies on req.user.clubIds being populated by auth middleware.
- */
 export const belongsToClub = (paramName: string = 'id') => {
   return (req: Request, res: Response, next: NextFunction): void => {
-    const user = (req as any).user;
+    const user = req.user as AuthenticatedUser | undefined;
 
     if (!user) {
-      throw new AppError('UNAUTHORIZED', 'Authentication required', 401);
+      throw new AppError('Authentication required', 401, 'UNAUTHORIZED');
     }
 
     if (user.role === 'super_admin') {
@@ -66,16 +53,16 @@ export const belongsToClub = (paramName: string = 'id') => {
     const clubId = req.params[paramName];
 
     if (!clubId) {
-      throw new AppError('BAD_REQUEST', `Missing param: ${paramName}`, 400);
+      throw new AppError(`Missing param: ${paramName}`, 400, 'BAD_REQUEST');
     }
 
     const memberClubIds: string[] = user.clubIds ?? [];
 
     if (!memberClubIds.includes(clubId)) {
       throw new AppError(
-        'FORBIDDEN',
         'You are not a member of this club',
         403,
+        'FORBIDDEN',
       );
     }
 

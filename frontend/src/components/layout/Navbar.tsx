@@ -49,12 +49,9 @@ export const Navbar: React.FC = () => {
       </button>
 
       {/* Logo on mobile */}
-      <Link to="/dashboard" className="lg:hidden flex items-center gap-2 font-bold text-gray-900">
-        <div className="w-7 h-7 bg-indigo-600 rounded-lg flex items-center justify-center">
-          <span className="text-white text-xs font-bold">CH</span>
-        </div>
-        ClubHub
-      </Link>
+      <Link to="/dashboard" className="lg:hidden">
+  <img src="/logo.png" alt="ClubHub" className="h-8 w-auto" />
+</Link>
 
       {/* Search */}
       <form onSubmit={handleSearch} className="flex-1 max-w-xl hidden md:block">

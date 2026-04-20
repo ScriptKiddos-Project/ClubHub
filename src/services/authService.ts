@@ -48,7 +48,9 @@ export async function registerUser(data: {
     select: { id: true, email: true, name: true, role: true, is_verified: true },
   });
 
-  await sendVerificationEmail({ to: user.email, userName: user.name, token: verifyToken });
+  // Fire-and-forget — email failure does NOT block registration
+  sendVerificationEmail({ to: user.email, userName: user.name, token: verifyToken })
+    .catch((err) => console.error('⚠️  Verification email failed (non-fatal):', err.message));
 
   return user;
 }
@@ -90,7 +92,11 @@ export async function loginUser(email: string, password: string) {
   const isMatch = await comparePassword(password, user.password_hash);
   if (!isMatch) throw new AppError('Invalid email or password', 401, 'INVALID_CREDENTIALS');
 
-  if (!user.is_verified) throw new AppError('Please verify your email first', 403, 'EMAIL_NOT_VERIFIED');
+  // In development, skip email verification check so you can test without real emails
+  if (process.env.NODE_ENV !== 'development' && !user.is_verified) {
+    throw new AppError('Please verify your email first', 403, 'EMAIL_NOT_VERIFIED');
+  }
+
   if (!user.is_active) throw new AppError('Account is suspended', 403, 'ACCOUNT_SUSPENDED');
 
   const accessToken = signAccessToken({ userId: user.id, email: user.email, role: user.role });
@@ -185,7 +191,9 @@ export async function forgotPassword(email: string) {
     },
   });
 
-  await sendPasswordResetEmail({ to: user.email, userName: user.name, token: resetToken });
+  // Fire-and-forget — email failure does NOT block the response
+  sendPasswordResetEmail({ to: user.email, userName: user.name, token: resetToken })
+    .catch((err) => console.error('⚠️  Password reset email failed (non-fatal):', err.message));
 
   return { message: 'If that email exists, a reset link has been sent.' };
 }
@@ -231,7 +239,6 @@ export async function coreJoin(data: {
   if (!user) throw new AppError('No account found with this email. Please register first.', 404, 'USER_NOT_FOUND');
   if (!user.is_verified) throw new AppError('Please verify your email before joining.', 403, 'EMAIL_NOT_VERIFIED');
 
-  // Club.status is ClubStatus enum: pending | approved | rejected | suspended
   const club = await prisma.club.findFirst({
     where: { id: data.club_id, status: 'approved' },
   });
@@ -267,7 +274,6 @@ export async function coreJoin(data: {
   });
   if (alreadyUsed) throw new AppError('You have already used this access code', 409, 'ALREADY_USED');
 
-  // assigned_role is a single ClubMemberRole: member | secretary | event_manager
   const assignedRole: ClubMemberRole = accessCode.assigned_role;
 
   await prisma.userClub.upsert({
@@ -276,7 +282,6 @@ export async function coreJoin(data: {
     create: { user_id: user.id, club_id: data.club_id, role: assignedRole },
   });
 
-  // Map ClubMemberRole → global Role for user-level upgrade
   const clubRoleToGlobalRole: Record<ClubMemberRole, Role> = {
     member: 'member',
     secretary: 'secretary',
@@ -300,7 +305,6 @@ export async function coreJoin(data: {
     });
   }
 
-  // AccessCodeUsage schema: id, code_id, user_id, used_at — nothing else
   await prisma.accessCodeUsage.create({
     data: { code_id: accessCode.id, user_id: user.id },
   });
@@ -320,14 +324,15 @@ export async function coreJoin(data: {
     },
   });
 
-  await sendWelcomeCoreEmail({
+  // Fire-and-forget — email failure does NOT block the response
+  sendWelcomeCoreEmail({
     to: user.email,
     userName: user.name,
     clubName: club.name,
     role: assignedRole,
     tenureStart: formatDate(accessCode.community.tenure_start),
     tenureEnd: formatDate(accessCode.community.tenure_end),
-  });
+  }).catch((err) => console.error('⚠️  Welcome email failed (non-fatal):', err.message));
 
   return {
     message: 'Successfully joined as core member',
@@ -404,7 +409,6 @@ export async function revokeCode(codeId: string, revokedBy: string) {
   if (!code) throw new AppError('Access code not found', 404, 'NOT_FOUND');
   if (code.is_revoked) throw new AppError('Code already revoked', 400, 'ALREADY_REVOKED');
 
-  // revoked_at and revoked_by exist in the real schema
   await prisma.communityAccessCode.update({
     where: { id: codeId },
     data: {

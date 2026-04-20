@@ -1,5 +1,6 @@
 import { PrismaClient } from '@prisma/client';
-import { redis } from '../config/redis';
+import getRedis from '../config/redis';
+const redis = getRedis();
 
 const prisma = new PrismaClient();
 
@@ -15,7 +16,7 @@ export const getGlobalAnalytics = async () => {
   const [totalUsers, totalClubs, totalEvents, attendanceStats] =
     await Promise.all([
       prisma.user.count(),
-      prisma.club.count({ where: { is_approved: true } }),
+      prisma.club.count({ where: { status: 'approved' } }),
       prisma.event.count(),
       prisma.eventRegistration.aggregate({
         _count: { id: true },

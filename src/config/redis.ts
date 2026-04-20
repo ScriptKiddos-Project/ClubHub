@@ -36,10 +36,11 @@ export async function connectRedis(): Promise<void> {
     await redis.connect();
     await redis.ping(); // verify connection is alive
     console.log("✅ Redis connection verified");
-  } catch (err: any) {
+  } catch (err: unknown) {
+    const error = err instanceof Error ? err : new Error(String(err));
     // ioredis throws if connect() called when already connected — safe to ignore
-    if (err?.message?.includes("already")) return;
-    console.error("❌ Redis connection failed:", err);
+    if (error.message?.includes("already")) return;
+    console.error("❌ Redis connection failed:", error);
     // Non-fatal: app starts, but Bull queues and PIN storage won't work
   }
 }

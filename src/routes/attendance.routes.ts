@@ -1,11 +1,11 @@
 import { Router } from 'express';
-import { authenticate, authorize } from '../middleware/auth';
+import { authenticate } from '../middleware/auth';
+import { rbac } from '../middleware/rbac';
 import { validate } from '../middleware/validate';
 import {
-  qrAttendanceLimiter,
-  pinAttendanceLimiter,
-  generateLimiter,
-  attendanceLimiter,
+  qrAttendanceRateLimiter,
+  pinAttendanceRateLimiter,
+  generalRateLimiter,
 } from '../middleware/rateLimiter';
 import {
   QRAttendanceSchema,
@@ -22,7 +22,6 @@ import {
   markBulkAttendance,
   getAttendanceReport,
 } from '../controllers/attendanceController';
-import { UserRole } from '../types';
 
 const router = Router();
 
@@ -32,16 +31,16 @@ router.use(authenticate);
 // ── QR Code Generation (Secretary only) ──────────────────────────────────────
 router.post(
   '/:id/qr-code',
-  authorize(UserRole.SECRETARY, UserRole.SUPER_ADMIN),
-  generateLimiter,
+  rbac('secretary', 'super_admin'),
+  generalRateLimiter,
   generateQRCode
 );
 
 // ── QR Attendance (Student / Member) ─────────────────────────────────────────
 router.post(
   '/qr-attendance',
-  authorize(UserRole.STUDENT, UserRole.MEMBER, UserRole.SECRETARY, UserRole.EVENT_MANAGER),
-  qrAttendanceLimiter,
+  rbac('student', 'member', 'secretary', 'event_manager'),
+  qrAttendanceRateLimiter,
   validate(QRAttendanceSchema),
   markQRAttendance
 );
@@ -49,16 +48,16 @@ router.post(
 // ── PIN Generation (Secretary only) ──────────────────────────────────────────
 router.post(
   '/:id/generate-pin',
-  authorize(UserRole.SECRETARY, UserRole.SUPER_ADMIN),
-  generateLimiter,
+  rbac('secretary', 'super_admin'),
+  generalRateLimiter,
   generatePIN
 );
 
 // ── PIN Attendance (Student / Member) ────────────────────────────────────────
 router.post(
   '/:id/pin-attendance',
-  authorize(UserRole.STUDENT, UserRole.MEMBER, UserRole.SECRETARY, UserRole.EVENT_MANAGER),
-  pinAttendanceLimiter,
+  rbac('student', 'member', 'secretary', 'event_manager'),
+  pinAttendanceRateLimiter,
   validate(PINAttendanceSchema),
   markPINAttendance
 );
@@ -66,8 +65,7 @@ router.post(
 // ── Manual Attendance (Secretary only) ───────────────────────────────────────
 router.put(
   '/:id/manual-attendance',
-  authorize(UserRole.SECRETARY, UserRole.SUPER_ADMIN),
-  attendanceLimiter,
+  rbac('secretary', 'super_admin'),
   validate(ManualAttendanceSchema),
   markManualAttendance
 );
@@ -75,8 +73,7 @@ router.put(
 // ── Bulk Attendance (Secretary only) ─────────────────────────────────────────
 router.put(
   '/:id/bulk-attendance',
-  authorize(UserRole.SECRETARY, UserRole.SUPER_ADMIN),
-  attendanceLimiter,
+  rbac('secretary', 'super_admin'),
   validate(BulkAttendanceSchema),
   markBulkAttendance
 );
@@ -84,7 +81,7 @@ router.put(
 // ── Attendance Report (Secretary + Event Manager + Super Admin) ───────────────
 router.get(
   '/:id/attendance-report',
-  authorize(UserRole.SECRETARY, UserRole.EVENT_MANAGER, UserRole.SUPER_ADMIN),
+  rbac('secretary', 'event_manager', 'super_admin'),
   getAttendanceReport
 );
 

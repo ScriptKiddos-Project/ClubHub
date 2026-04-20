@@ -39,7 +39,7 @@ router.get(
 router.post(
   "/",
   authenticate,
-  rbac(["event_manager", "super_admin"]),
+  rbac("event_manager", "super_admin"),
   validate(createEventSchema),
   eventController.createEvent
 );
@@ -56,7 +56,7 @@ router.get(
 router.put(
   "/:id",
   authenticate,
-  rbac(["event_manager", "super_admin"]),
+  rbac("event_manager", "super_admin"),
   validate(updateEventSchema),
   eventController.updateEvent
 );
@@ -65,7 +65,7 @@ router.put(
 router.delete(
   "/:id",
   authenticate,
-  rbac(["event_manager", "super_admin"]),
+  rbac("event_manager", "super_admin"),
   validate(eventIdParamSchema),
   eventController.deleteEvent
 );

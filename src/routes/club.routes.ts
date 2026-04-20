@@ -7,7 +7,6 @@ import { rbac } from "../middleware/rbac";
 import { validate } from "../middleware/validate";
 import {
   createClubSchema,
-  approveClubSchema,
   joinLeaveClubSchema,
   listClubsSchema,
   clubIdParamSchema,
@@ -46,7 +45,7 @@ router.post(
 router.post(
   "/:id/join",
   authenticate,
-  rbac(["student", "member", "secretary", "event_manager", "super_admin"]),
+  rbac("student", "member", "secretary", "event_manager", "super_admin"),
   validate(joinLeaveClubSchema),
   clubController.joinClub
 );

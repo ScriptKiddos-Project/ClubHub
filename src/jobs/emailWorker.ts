@@ -1,8 +1,8 @@
 import { emailQueue, EmailJobType } from '../config/queues';
 import {
-  sendRegistrationConfirmation,
-  sendEventReminder,
-  sendEventCancellation,
+  sendEventRegistrationEmail,
+  sendEventReminderEmail,
+  sendEventCancellationEmail,
 } from '../services/emailService';
 
 emailQueue.process(EmailJobType.REGISTRATION_CONFIRMATION, async (job) => {
@@ -10,7 +10,7 @@ emailQueue.process(EmailJobType.REGISTRATION_CONFIRMATION, async (job) => {
 
   console.log(`[EmailWorker] Sending registration confirmation to ${userEmail} for "${eventTitle}"`);
 
-  await sendRegistrationConfirmation({
+  await sendEventRegistrationEmail({
     to: userEmail,
     userName,
     eventTitle,
@@ -28,7 +28,7 @@ emailQueue.process(EmailJobType.EVENT_REMINDER, async (job) => {
 
   console.log(`[EmailWorker] Sending event reminder to ${userEmail} for "${eventTitle}"`);
 
-  await sendEventReminder({
+  await sendEventReminderEmail({
     to: userEmail,
     userName,
     eventTitle,
@@ -46,7 +46,7 @@ emailQueue.process(EmailJobType.EVENT_CANCELLATION, async (job) => {
 
   console.log(`[EmailWorker] Sending cancellation email to ${userEmail} for "${eventTitle}"`);
 
-  await sendEventCancellation({ to: userEmail, userName, eventTitle, reason });
+  await sendEventCancellationEmail({ to: userEmail, userName, eventTitle, reason });
 
   console.log(`[EmailWorker] ✅ Cancellation email sent to ${userEmail}`);
 });

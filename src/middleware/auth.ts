@@ -32,16 +32,17 @@ export const authenticate = (
 
     // Explicitly extract — don't leak iat/exp/other claims into req.user
     req.user = {
-      id: payload.id,
+      id: (payload as any).userId ?? payload.id,
       email: payload.email,
       role: payload.role,
       name: payload.name,
     };
 
     next();
-  } catch (err: any) {
+  } catch (err: Error | unknown) {
     // Distinguish expired vs invalid — frontend Axios interceptor depends on this
-    if (err.name === "TokenExpiredError") {
+    const error = err instanceof Error ? err : new Error(String(err));
+    if ('name' in error && error.name === "TokenExpiredError") {
       sendError(res, 401, "TOKEN_EXPIRED", "Access token has expired");
       return;
     }

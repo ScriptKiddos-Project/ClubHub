@@ -6,6 +6,7 @@ import { AppError } from "../utils/AppError";
 import {
   ClubCategory,
   ClubMemberRole,
+  ClubStatus,
   Role,
 } from "@prisma/client";
 import {
@@ -23,7 +24,7 @@ export async function listClubs(
   const { page = 1, limit = 20, category, search } = filters;
   const skip = (page - 1) * limit;
 
-  const where: Record<string, unknown> = { is_approved: true };
+  const where: Record<string, unknown> = { status: ClubStatus.approved };
 
   if (category) where.category = category;
   if (search) {
@@ -46,7 +47,7 @@ export async function listClubs(
         category: true,
         logo_url: true,
         member_count: true,
-        is_approved: true,
+        status: true,
         description: true,
       },
     }),
@@ -117,7 +118,7 @@ export async function getClubById(
 
   return {
     ...club,
-    is_approved: club.is_approved,
+    status: club.status,
     upcoming_events: club.events.map((e) => ({
       ...e,
       club_name: club.name,
@@ -134,7 +135,7 @@ export async function getClubById(
 export async function createClub(
   input: CreateClubInput,
   creatorId: string
-): Promise<{ id: string; name: string; slug: string; is_approved: boolean }> {
+): Promise<{ id: string; name: string; slug: string; status: ClubStatus }> {
   // Check for name/slug uniqueness
   const existing = await prisma.club.findFirst({
     where: { OR: [{ name: input.name }, { slug: input.slug }] },
@@ -153,9 +154,9 @@ export async function createClub(
     data: {
       ...input,
       created_by: creatorId,
-      is_approved: false,
+      status: ClubStatus.pending,
     },
-    select: { id: true, name: true, slug: true, is_approved: true },
+    select: { id: true, name: true, slug: true, status: true },
   });
 
   // Create audit log
@@ -175,7 +176,7 @@ export async function createClub(
 // ─── List pending clubs (Super Admin only) ────────────────────────────────────
 export async function listPendingClubs(): Promise<ClubListItem[]> {
   return prisma.club.findMany({
-    where: { is_approved: false },
+    where: { status: ClubStatus.pending },
     orderBy: { created_at: "asc" },
     select: {
       id: true,
@@ -184,7 +185,7 @@ export async function listPendingClubs(): Promise<ClubListItem[]> {
       category: true,
       logo_url: true,
       member_count: true,
-      is_approved: true,
+      status: true,
       description: true,
     },
   });
@@ -196,21 +197,23 @@ export async function approveOrRejectClub(
   approved: boolean,
   reason: string | undefined,
   adminId: string
-): Promise<{ id: string; is_approved: boolean; reject_reason: string | null }> {
+): Promise<{ id: string; status: ClubStatus; rejection_reason: string | null }> {
   const club = await prisma.club.findUnique({ where: { id: clubId } });
   if (!club) throw new AppError("Club not found", 404, "CLUB_NOT_FOUND");
 
-  if (club.is_approved) {
+  if (club.status === ClubStatus.approved) {
     throw new AppError("Club is already approved", 409, "CLUB_ALREADY_APPROVED");
   }
 
   const updated = await prisma.club.update({
     where: { id: clubId },
     data: {
-      is_approved: approved,
-      reject_reason: approved ? null : (reason ?? "No reason given"),
+      status: approved ? ClubStatus.approved : ClubStatus.rejected,
+      rejection_reason: approved ? null : (reason ?? "No reason given"),
+      approved_by: approved ? adminId : null,
+      approved_at: approved ? new Date() : null,
     },
-    select: { id: true, is_approved: true, reject_reason: true },
+    select: { id: true, status: true, rejection_reason: true },
   });
 
   await prisma.auditLog.create({
@@ -234,7 +237,7 @@ export async function joinClub(
 ): Promise<{ message: string }> {
   const club = await prisma.club.findUnique({ where: { id: clubId } });
   if (!club) throw new AppError("Club not found", 404, "CLUB_NOT_FOUND");
-  if (!club.is_approved)
+  if (club.status !== ClubStatus.approved)
     throw new AppError("This club is not yet approved", 400, "CLUB_NOT_APPROVED");
 
   const existing = await prisma.userClub.findUnique({

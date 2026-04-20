@@ -30,16 +30,22 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ allowedRoles }) 
   const location = useLocation();
 
   useEffect(() => {
+    // Only attempt refresh once on initial mount
     if (!isAuthenticated && isLoading) {
       authService.refresh()
         .then(async ({ data }) => {
           const token = data.data.accessToken;
-          const userRes = await authService.getMe();
-          login(userRes.data.data, token);
+          try {
+            const userRes = await authService.getMe();
+            login(userRes.data.data, token);
+          } catch {
+            // getMe failed — clear loading so login page shows
+            setLoading(false);
+          }
         })
         .catch(() => setLoading(false));
     }
-  }, [isAuthenticated, isLoading, login, setLoading]);
+  }, []); // run once on mount only
 
   if (isLoading) return <PageLoader/>;
   if (!isAuthenticated) return <Navigate to="/login" state={{ from: location }} replace/>;

@@ -18,14 +18,14 @@ const STATUS_CONFIG: Record<AttendanceStatus, { label: string; color: string; ba
 };
 
 const MOCK_RECORDS: AttendanceRecord[] = [
-  { userId: '1', user: { id: '1', name: 'Marcus Thorne',   email: 'marcus@campus.edu',  avatarUrl: undefined }, eventId: 'e1', status: 'present',    method: 'qr',     markedAt: '2025-11-05T09:12:00Z', pointsAwarded: 200 },
-  { userId: '2', user: { id: '2', name: 'Priya Sharma',    email: 'priya@campus.edu',   avatarUrl: undefined }, eventId: 'e1', status: 'present',    method: 'pin',    markedAt: '2025-11-05T09:18:00Z', pointsAwarded: 200 },
-  { userId: '3', user: { id: '3', name: 'James Wu',        email: 'james@campus.edu',   avatarUrl: undefined }, eventId: 'e1', status: 'late',       method: 'manual', markedAt: '2025-11-05T10:45:00Z', pointsAwarded: 100 },
-  { userId: '4', user: { id: '4', name: 'Aisha Okonkwo',   email: 'aisha@campus.edu',   avatarUrl: undefined }, eventId: 'e1', status: 'absent',     method: undefined, markedAt: undefined, pointsAwarded: 0 },
-  { userId: '5', user: { id: '5', name: 'Carlos Mendez',   email: 'carlos@campus.edu',  avatarUrl: undefined }, eventId: 'e1', status: 'present',    method: 'qr',     markedAt: '2025-11-05T09:05:00Z', pointsAwarded: 200 },
-  { userId: '6', user: { id: '6', name: 'Sarah Miller',    email: 'sarah@campus.edu',   avatarUrl: undefined }, eventId: 'e1', status: 'left_early', method: 'manual', markedAt: '2025-11-05T09:22:00Z', pointsAwarded: 50  },
-  { userId: '7', user: { id: '7', name: 'Alex Rivera',     email: 'alex@campus.edu',    avatarUrl: undefined }, eventId: 'e1', status: 'no_show',    method: undefined, markedAt: undefined, pointsAwarded: 0 },
-  { userId: '8', user: { id: '8', name: 'Jordan Lee',      email: 'jordan@campus.edu',  avatarUrl: undefined }, eventId: 'e1', status: 'present',    method: 'qr',     markedAt: '2025-11-05T09:08:00Z', pointsAwarded: 200 },
+  { userId: '1', user: { id: '1', name: 'Marcus Thorne',   email: 'marcus@campus.edu',  avatarUrl: undefined }, eventId: 'e1', status: 'present',    method: 'qr',     markedAt: '2025-11-05T09:12:00Z', points_awarded: 200 },
+  { userId: '2', user: { id: '2', name: 'Priya Sharma',    email: 'priya@campus.edu',   avatarUrl: undefined }, eventId: 'e1', status: 'present',    method: 'pin',    markedAt: '2025-11-05T09:18:00Z', points_awarded: 200 },
+  { userId: '3', user: { id: '3', name: 'James Wu',        email: 'james@campus.edu',   avatarUrl: undefined }, eventId: 'e1', status: 'late',       method: 'manual', markedAt: '2025-11-05T10:45:00Z', points_awarded: 100 },
+  { userId: '4', user: { id: '4', name: 'Aisha Okonkwo',   email: 'aisha@campus.edu',   avatarUrl: undefined }, eventId: 'e1', status: 'absent',     method: undefined, markedAt: undefined, points_awarded: 0 },
+  { userId: '5', user: { id: '5', name: 'Carlos Mendez',   email: 'carlos@campus.edu',  avatarUrl: undefined }, eventId: 'e1', status: 'present',    method: 'qr',     markedAt: '2025-11-05T09:05:00Z', points_awarded: 200 },
+  { userId: '6', user: { id: '6', name: 'Sarah Miller',    email: 'sarah@campus.edu',   avatarUrl: undefined }, eventId: 'e1', status: 'left_early', method: 'manual', markedAt: '2025-11-05T09:22:00Z', points_awarded: 50  },
+  { userId: '7', user: { id: '7', name: 'Alex Rivera',     email: 'alex@campus.edu',    avatarUrl: undefined }, eventId: 'e1', status: 'no_show',    method: undefined, markedAt: undefined, points_awarded: 0 },
+  { userId: '8', user: { id: '8', name: 'Jordan Lee',      email: 'jordan@campus.edu',  avatarUrl: undefined }, eventId: 'e1', status: 'present',    method: 'qr',     markedAt: '2025-11-05T09:08:00Z', points_awarded: 200 },
 ];
 
 const AttendanceReportPage: React.FC = () => {
@@ -80,7 +80,7 @@ const AttendanceReportPage: React.FC = () => {
       ['Name', 'Email', 'Status', 'Method', 'Marked At', 'Points'].join(','),
       ...records.map((r) => [
         r.user?.name ?? '', r.user?.email ?? '', r.status,
-        r.method ?? 'N/A', r.markedAt ?? 'N/A', r.pointsAwarded ?? 0,
+        r.method ?? 'N/A', r.markedAt ?? 'N/A', r.points_awarded ?? 0,
       ].join(','))
     ].join('\n');
     const blob = new Blob([csv], { type: 'text/csv' });
@@ -197,8 +197,8 @@ const AttendanceReportPage: React.FC = () => {
                       {record.markedAt ? new Date(record.markedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '—'}
                     </td>
                     <td className="px-5 py-3.5">
-                      <span className={cn('font-bold text-sm', record.pointsAwarded ? 'text-indigo-600' : 'text-gray-400')}>
-                        {record.pointsAwarded ? `+${record.pointsAwarded}` : '0'}
+                      <span className={cn('font-bold text-sm', record.points_awarded ? 'text-indigo-600' : 'text-gray-400')}>
+                        {record.points_awarded ? `+${record.points_awarded}` : '0'}
                       </span>
                     </td>
                     <td className="px-5 py-3.5">

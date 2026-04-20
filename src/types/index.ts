@@ -115,6 +115,7 @@ export interface ClubDetail extends ClubListItem {
 
 export interface CreateClubInput {
   name:          string;
+  slug:          string;
   description?:  string;
   category:      ClubCategory;
   logo_url?:     string;

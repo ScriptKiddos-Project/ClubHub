@@ -12,7 +12,7 @@ export interface User {
   enrollmentYear: number;
   degreeType: DegreeType;
   isVerified: boolean;
-  totalPoints: number;
+  total_points: number;
   totalVolunteerHours: number;
   avatarUrl?: string;
   gpa?: number;
@@ -164,12 +164,12 @@ export interface AttendanceRecord {
   status: AttendanceStatus;
   method?: AttendanceMethod;
   markedAt?: string;
-  pointsAwarded?: number;
+  points_awarded?: number;
 }
 
 export interface QRCodeData {
   eventId: string;
-  qrCodeId: string;
+  qr_code_id: string;
   validFrom: string;
   validUntil: string;
   imageUrl: string;
@@ -200,7 +200,7 @@ export interface StudentStats {
   totalEventsAttended: number;
   totalEventsRegistered: number;
   attendanceRate: number;
-  totalPoints: number;
+  total_points: number;
   totalVolunteerHours: number;
   pointsHistory: { date: string; points: number }[];
   eventsHistory: { month: string; count: number }[];
@@ -220,7 +220,7 @@ export interface ClubAnalytics {
   memberCountOverTime: { date: string; count: number }[];
   eventCount: number;
   avgAttendanceRate: number;
-  totalPointsAwarded: number;
+  total_points_awarded: number;
 }
 
 // ─── DASHBOARD ──────────────────────────────────────────────────────────────
@@ -229,7 +229,7 @@ export interface DashboardData {
   user: User;
   myClubs: Club[];
   upcomingEvents: Event[];
-  totalPoints: number;
+  total_points: number;
   pointsToNextLevel: number;
   recentActivity: ActivityItem[];
   upcomingDeadlines: DeadlineItem[];
@@ -300,7 +300,7 @@ export interface SkillMatrix {
 }
 
 export interface Achievement {
-  totalPoints: number;
+  total_points: number;
   totalHours: number;
   badges: Badge[];
   experiences: ExperienceEntry[];

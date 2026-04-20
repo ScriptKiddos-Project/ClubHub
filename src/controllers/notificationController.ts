@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import * as notificationService from '../services/notificationService';
+import { AppError } from '../utils/AppError';
 
 // ── GET /api/v1/notifications ─────────────────────────────────────────────────
 export async function getNotifications(req: Request, res: Response) {
@@ -14,10 +15,12 @@ export async function getNotifications(req: Request, res: Response) {
       success: true,
       data: result,
     });
-  } catch (err: any) {
-    return res.status(err.status ?? 500).json({
+  } catch (err: unknown) {
+    const error = err instanceof AppError ? err : (err instanceof Error ? err : new Error(String(err)));
+    const statusCode = error instanceof AppError ? error.statusCode : 500;
+    return res.status(statusCode).json({
       success: false,
-      error: { code: 'NOTIFICATIONS_ERROR', message: err.message },
+      error: { code: 'NOTIFICATIONS_ERROR', message: error.message },
     });
   }
 }
@@ -34,10 +37,12 @@ export async function markAsRead(req: Request, res: Response) {
       success: true,
       data: notification,
     });
-  } catch (err: any) {
-    return res.status(err.status ?? 500).json({
+  } catch (err: unknown) {
+    const error = err instanceof AppError ? err : (err instanceof Error ? err : new Error(String(err)));
+    const statusCode = error instanceof AppError ? error.statusCode : 500;
+    return res.status(statusCode).json({
       success: false,
-      error: { code: 'MARK_READ_ERROR', message: err.message },
+      error: { code: 'MARK_READ_ERROR', message: error.message },
     });
   }
 }
@@ -53,10 +58,12 @@ export async function markAllAsRead(req: Request, res: Response) {
       message: `${result.count} notifications marked as read`,
       data: result,
     });
-  } catch (err: any) {
-    return res.status(err.status ?? 500).json({
+  } catch (err: unknown) {
+    const error = err instanceof AppError ? err : (err instanceof Error ? err : new Error(String(err)));
+    const statusCode = error instanceof AppError ? error.statusCode : 500;
+    return res.status(statusCode).json({
       success: false,
-      error: { code: 'MARK_ALL_READ_ERROR', message: err.message },
+      error: { code: 'MARK_ALL_READ_ERROR', message: error.message },
     });
   }
 }
@@ -67,16 +74,18 @@ export async function deleteNotification(req: Request, res: Response) {
     const { id } = req.params;
     const userId = req.user!.id;
 
-    await notificationService.deleteNotification(id, userId);
+    await notificationService.deleteNotificationById(id, userId);
 
     return res.status(200).json({
       success: true,
       message: 'Notification deleted',
     });
-  } catch (err: any) {
-    return res.status(err.status ?? 500).json({
+  } catch (err: unknown) {
+    const error = err instanceof AppError ? err : (err instanceof Error ? err : new Error(String(err)));
+    const statusCode = error instanceof AppError ? error.statusCode : 500;
+    return res.status(statusCode).json({
       success: false,
-      error: { code: 'DELETE_NOTIFICATION_ERROR', message: err.message },
+      error: { code: 'DELETE_NOTIFICATION_ERROR', message: error.message },
     });
   }
 }

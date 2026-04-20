@@ -23,7 +23,7 @@ export async function createNotification(
       title:    options.title,
       body:     options.body,
       type:     options.type,
-      metadata: options.metadata ?? {},
+      metadata: (options.metadata ?? {}) as import("@prisma/client").Prisma.InputJsonValue,
     },
   });
 }
@@ -45,7 +45,7 @@ export async function createBulkNotifications(options: {
       title:    options.title,
       body:     options.body,
       type:     options.type,
-      metadata: options.metadata ?? {},
+      metadata: (options.metadata ?? {}) as import("@prisma/client").Prisma.InputJsonValue,
     })),
   });
 
@@ -127,4 +127,31 @@ export async function markAllNotificationsRead(
   });
 
   return { count: result.count };
+}
+// ── DELETE /api/v1/notifications/:id ─────────────────────────────────────────
+
+export async function deleteNotificationById(
+  notificationId: string,
+  userId: string
+): Promise<void> {
+  const notification = await prisma.notification.findUnique({
+    where: { id: notificationId },
+    select: { user_id: true },
+  });
+
+  if (!notification) {
+    const err = new Error("Notification not found") as any;
+    err.statusCode = 404;
+    err.code = "NOT_FOUND";
+    throw err;
+  }
+
+  if (notification.user_id !== userId) {
+    const err = new Error("Access denied") as any;
+    err.statusCode = 403;
+    err.code = "FORBIDDEN";
+    throw err;
+  }
+
+  await prisma.notification.delete({ where: { id: notificationId } });
 }

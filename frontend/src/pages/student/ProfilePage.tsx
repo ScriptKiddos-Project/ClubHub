@@ -48,7 +48,7 @@ const ProfilePage: React.FC = () => {
   const name = user?.name ?? 'Marcus Thorne';
   const dept = user?.department ?? 'Computer Science';
   const gpa = user?.gpa ?? 3.92;
-  const points = user?.totalPoints ?? 2450;
+  const points = user?.total_points ?? 2450;
   const streak = user?.streak ?? 12;
 
   return (

@@ -1,11 +1,10 @@
 import { PrismaClient } from '@prisma/client';
 import { reminderQueue, emailQueue, notificationQueue, EmailJobType, NotificationJobType } from '../config/queues';
-import { NotificationType } from '../types';
+import { NotificationType } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
 // ── Schedule reminders for newly created events ───────────────────────────────
-// Called from event creation flow to schedule the 24h reminder job
 export async function scheduleEventReminder(eventId: string) {
   const event = await prisma.event.findUnique({
     where: { id: eventId },
@@ -33,7 +32,7 @@ export async function scheduleEventReminder(eventId: string) {
   );
 }
 
-// ── Cancel a scheduled reminder (e.g. event cancelled or rescheduled) ─────────
+// ── Cancel a scheduled reminder ───────────────────────────────────────────────
 export async function cancelEventReminder(eventId: string) {
   const job = await reminderQueue.getJob(`reminder:${eventId}`);
   if (job) {
@@ -58,15 +57,13 @@ reminderQueue.process('send_event_reminders', async (job) => {
     return;
   }
 
-  // Fetch all registered users
   const registrations = await prisma.eventRegistration.findMany({
-    where: { eventId },
+    where: { event_id: eventId },
     include: { user: { select: { id: true, name: true, email: true } } },
   });
 
   console.log(`[ReminderWorker] Sending reminders to ${registrations.length} registrants`);
 
-  // Queue individual email + notification jobs
   const emailJobs = registrations.map(reg => ({
     name: EmailJobType.EVENT_REMINDER,
     data: {
@@ -87,7 +84,7 @@ reminderQueue.process('send_event_reminders', async (job) => {
       userId: reg.user.id,
       title: `🕐 Event tomorrow: ${event.title}`,
       body: `Don't forget! "${event.title}" is tomorrow at ${event.venue}. See you there!`,
-      type: NotificationType.EVENT_REMINDER,
+      type: NotificationType.event_reminder,
     },
   }));
 
