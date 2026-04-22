@@ -7,6 +7,7 @@ import { Button } from '../../components/ui/Button';
 import { cn } from '../../utils';
 import toast from 'react-hot-toast';
 import type { Club } from '../../types';
+import { SuperAdminUsersTab } from './SuperAdminUsersTab';
 
 const GLOBAL_STATS = [
   { label: 'Total Users', value: '4,218', icon: <Users size={20} className="text-indigo-600"/>, bg: 'bg-indigo-50', change: '+84 this week' },
@@ -207,45 +208,9 @@ const SuperAdminPage: React.FC = () => {
       )}
 
       {/* Users */}
-      {activeTab === 'users' && (
-        <Card>
-          <h2 className="font-bold text-gray-900 mb-4">Platform Users</h2>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-gray-100">
-                  {['User', 'Department', 'Role', 'Joined', 'Status'].map((h) => (
-                    <th key={h} className="text-left text-xs font-semibold text-gray-400 uppercase pb-3 pr-4">{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-50">
-                {[...RECENT_USERS, ...RECENT_USERS.map((u) => ({ ...u, name: u.name + ' II', email: '2' + u.email }))].map((u, i) => (
-                  <tr key={i} className="hover:bg-gray-50 transition-colors">
-                    <td className="py-3 pr-4">
-                      <div className="flex items-center gap-2">
-                        <Avatar name={u.name} size="sm"/>
-                        <div>
-                          <p className="font-medium text-gray-900">{u.name}</p>
-                          <p className="text-xs text-gray-400">{u.email}</p>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="py-3 pr-4 text-gray-600">{u.dept}</td>
-                    <td className="py-3 pr-4">
-                      <Badge variant={u.role === 'secretary' ? 'success' : u.role === 'member' ? 'primary' : 'default'} className="text-xs capitalize">{u.role}</Badge>
-                    </td>
-                    <td className="py-3 pr-4 text-gray-500">{u.joined}</td>
-                    <td className="py-3">
-                      <Badge variant="success" className="text-xs">Active</Badge>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </Card>
-      )}
+      {activeTab === 'users' &&
+        <SuperAdminUsersTab />
+      }
 
       {/* Access Codes */}
       {activeTab === 'access-codes' && (

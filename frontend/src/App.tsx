@@ -32,6 +32,7 @@ const MemberRosterPage   = lazy(() => import('./pages/admin/MemberRosterPage'));
 
 // ── Misc
 import { SettingsPage, ManagementPage, NotFoundPage } from './pages/misc';
+import SuperAdminUsersTab from './pages/admin/SuperAdminUsersTab';
 
 const App: React.FC = () => (
   <BrowserRouter>
@@ -79,6 +80,8 @@ const App: React.FC = () => (
             <Route path="/admin/dashboard"                    element={<AdminDashboard/>}/>
             <Route path="/admin/events/:eventId/attendance"   element={<AttendanceReport/>}/>
             <Route path="/admin/members"                      element={<MemberRosterPage/>}/>
+            <Route path="/super-admin"                      element={<SuperAdminUsersTab/>}/>
+
           </Route>
         </Route>
 

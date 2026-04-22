@@ -95,17 +95,30 @@ export const ResetPasswordPage: React.FC = () => {
 export const VerifyEmailPage: React.FC = () => {
   const [params] = useSearchParams();
   const token = params.get('token');
-  const [status, setStatus] = useState<'pending' | 'success' | 'error'>(token ? 'pending' : 'pending');
+  const [status, setStatus] = useState<'pending' | 'success' | 'error'>(
+    token ? 'pending' : 'pending'
+  );
+  const calledRef = React.useRef(false);  // ← add this
 
   useEffect(() => {
-    if (token) {
+    if (token && !calledRef.current) {
+      calledRef.current = true;  // ← prevent second call
       import('../../services/authService').then(({ authService }) =>
         authService.verifyEmail(token)
           .then(() => setStatus('success'))
-          .catch(() => setStatus('error'))
+          .catch((err) => {
+            console.log('Full error:', JSON.stringify(err?.response?.data));
+            const msg = err?.response?.data?.error?.message || '';
+            if (msg.toLowerCase().includes('already verified')) {
+              setStatus('success');
+            } else {
+              setStatus('error');
+            }
+          })
       );
     }
   }, [token]);
+  // ... rest of JSX stays the same
 
   return (
     <div className="text-center">

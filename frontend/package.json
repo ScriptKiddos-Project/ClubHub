@@ -22,6 +22,7 @@
     "@radix-ui/react-tooltip": "^1.2.8",
     "@tailwindcss/vite": "^4.2.2",
     "@tanstack/react-table": "^8.21.3",
+    "@tanstack/react-virtual": "^3.13.24",
     "axios": "^1.15.0",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",

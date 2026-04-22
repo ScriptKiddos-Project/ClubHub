@@ -1,6 +1,6 @@
 // server/src/validators/club.validator.ts
 import { z } from "zod";
-import { ClubCategory, ClubMemberRole } from "@prisma/client";
+import { ClubCategory } from "@prisma/client";
 
 export const createClubSchema = z.object({
   body: z.object({

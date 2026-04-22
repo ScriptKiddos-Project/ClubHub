@@ -12,7 +12,7 @@ import adminRouter from './admin.routes';
 const router = Router();
 
 // Health check
-router.use('/health', healthRouter);
+router.use('/api/health', healthRouter);
 
 // Auth
 router.use('/api/v1/auth', authRouter);
