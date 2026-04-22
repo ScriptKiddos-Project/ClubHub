@@ -1,5 +1,5 @@
 import React from 'react';
-import { NavLink, useLocation } from 'react-router-dom';
+import { NavLink } from 'react-router-dom';
 import {
   LayoutDashboard, Compass, Calendar, BarChart2, Users, Settings,
   User, X, BookOpen, Shield
@@ -31,7 +31,7 @@ const navItems: NavItem[] = [
 export const Sidebar: React.FC = () => {
   const { user } = useAuthStore();
   const { sidebarOpen, setSidebarOpen } = useUIStore();
-  const location = useLocation();
+
 
   const visibleItems = navItems.filter((item) =>
     !item.roles || (user && item.roles.includes(user.role))

@@ -7,6 +7,7 @@ import {
   decodeQRData,
   verifyQRSignature,
   isQRTimeWindowValid,
+  generateQRCodeImage,
   generatePIN,
   hashPIN,
   verifyPIN,
@@ -60,7 +61,9 @@ export async function generateQRCode(eventId: string, actorId: string) {
     },
   });
 
-  return { qrData, qrCodeId: payload.qrCodeId, validUntil: new Date(payload.validUntil * 1000) };
+  const imageUrl = await generateQRCodeImage(qrData);
+
+  return { qrData, imageUrl, qrCodeId: payload.qrCodeId, validUntil: new Date(payload.validUntil * 1000) };
 }
 
 // ── QR Attendance Validation ──────────────────────────────────────────────────
@@ -326,8 +329,8 @@ export async function markBulkAttendance(
           }
 
           results.push({ userId, status, success: true });
-        } catch (err: any) {
-          results.push({ userId, status, success: false, error: err.message });
+        } catch (err: unknown) {
+          results.push({ userId, status, success: false, error: err instanceof Error ? err.message : String(err) });
         }
       })
     );
@@ -419,7 +422,7 @@ async function _createAttendanceLog(entry: AttendanceLogEntry) {
   });
 }
 
-async function _awardPointsAndHours(userId: string, event: any): Promise<{ points: number; hours: number }> {
+async function _awardPointsAndHours(userId: string, event: { id: string; points_reward: number | null; volunteer_hours: number | null }): Promise<{ points: number; hours: number }> {
   const pointsToAward = event.points_reward ?? 0;
   const hoursToAward = event.volunteer_hours ?? 0;
 

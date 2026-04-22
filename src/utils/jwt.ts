@@ -26,7 +26,7 @@ export function signAccessToken(payload: {
   return jwt.sign(
     { ...payload, type: 'access' } as JwtPayload,
     ACCESS_SECRET,
-    { expiresIn: ACCESS_EXPIRES as any } // 🔥 key fix
+    { expiresIn: ACCESS_EXPIRES } as jwt.SignOptions
   );
 }
 
@@ -39,7 +39,7 @@ export function signRefreshToken(payload: {
   return jwt.sign(
     { ...payload, type: 'refresh' } as JwtPayload,
     REFRESH_SECRET,
-    { expiresIn: REFRESH_EXPIRES as any } // 🔥 key fix
+    { expiresIn: REFRESH_EXPIRES } as jwt.SignOptions
   );
 }
 

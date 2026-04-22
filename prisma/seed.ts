@@ -9,8 +9,13 @@ import {
   DegreeType,
 } from "@prisma/client";
 import bcrypt from "bcryptjs";
+import { createHash } from "crypto";
 
 const prisma = new PrismaClient();
+const currentYear = new Date().getFullYear();
+const nextYear = currentYear + 1;
+const coreAccessCode = `CODECRAFT-${currentYear}-SEC`;
+const coreAccessCodeHash = createHash("sha256").update(coreAccessCode).digest("hex");
 
 const futureDate = (daysFromNow: number, hour = 14): Date => {
   const d = new Date();
@@ -175,9 +180,9 @@ async function main() {
   const techCommunity = await prisma.community.create({
     data: {
       club_id: techClub.id,
-      name: "CodeCraft Core Team 2025",
-      tenure_start: new Date("2025-01-01"),
-      tenure_end: new Date("2025-12-31"),
+      name: `CodeCraft Core Team ${currentYear}`,
+      tenure_start: new Date(`${currentYear}-01-01T00:00:00.000Z`),
+      tenure_end: new Date(`${nextYear}-12-31T23:59:59.000Z`),
       created_by: superAdmin.id,
     },
   });
@@ -186,14 +191,14 @@ async function main() {
     data: {
       community_id: techCommunity.id,
       // SHA-256 of "CODECRAFT-2025-SEC" — plaintext printed below for Postman testing
-      code_hash: "8e6b6e1a9c3f2d4b5a7e0c1f3d8b2e9a4c6f1d3b7e5a2c0f8d4b1e6a3c9f2d5b",
+      code_hash: coreAccessCodeHash,
       assigned_role: ClubMemberRole.secretary,
       max_uses: 10,
     },
   });
 
   console.log("✅ Created community + access code");
-  console.log("   Access code plaintext (for /auth/core-join testing): CODECRAFT-2025-SEC");
+  console.log(`   Access code plaintext (for /auth/core-join testing): ${coreAccessCode}`);
 
   // ── Events ─────────────────────────────────────────────────────────────────
   const hackathon = await prisma.event.create({

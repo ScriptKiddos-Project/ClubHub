@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Bell, Shield, User, Palette, Globe, Save, Home } from 'lucide-react';
+import { Bell, Shield, User, Palette, Save, Home } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import { Card } from '../components/ui';
 import { Button } from '../components/ui/Button';
@@ -33,7 +33,7 @@ export const SettingsPage: React.FC = () => {
       <h1 className="text-2xl font-bold text-gray-900">Settings</h1>
       <div className="flex flex-col sm:flex-row gap-5">
         {/* Tabs */}
-        <aside className="sm:w-48 flex-shrink-0">
+        <aside className="sm:w-48 shrink-0">
           <nav className="space-y-0.5">
             {SETTINGS_TABS.map((tab) => (
               <button key={tab.id} onClick={() => setActiveTab(tab.id)}
@@ -77,7 +77,7 @@ export const SettingsPage: React.FC = () => {
                     <p className="text-sm font-semibold text-gray-900">{item.label}</p>
                     <p className="text-xs text-gray-500 mt-0.5">{item.desc}</p>
                   </div>
-                  <button className="relative w-10 h-5 bg-indigo-600 rounded-full flex-shrink-0 transition-colors">
+                  <button className="relative w-10 h-5 bg-indigo-600 rounded-full shrink-0 transition-colors">
                     <div className="absolute right-0.5 top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform"/>
                   </button>
                 </div>
@@ -96,7 +96,7 @@ export const SettingsPage: React.FC = () => {
               ].map((item) => (
                 <div key={item.label} className="flex items-center justify-between py-3 border-b border-gray-50 last:border-0">
                   <p className="text-sm text-gray-800">{item.label}</p>
-                  <button className={cn('relative w-10 h-5 rounded-full flex-shrink-0 transition-colors', item.enabled ? 'bg-indigo-600' : 'bg-gray-200')}>
+                  <button className={cn('relative w-10 h-5 rounded-full shrink-0 transition-colors', item.enabled ? 'bg-indigo-600' : 'bg-gray-200')}>
                     <div className={cn('absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform', item.enabled ? 'translate-x-5' : 'translate-x-0.5')}/>
                   </button>
                 </div>

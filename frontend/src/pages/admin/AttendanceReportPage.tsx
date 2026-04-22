@@ -40,7 +40,7 @@ const AttendanceReportPage: React.FC = () => {
 
   useEffect(() => {
     if (!eventId) return;
-    setLoading(true);
+    setLoading(true); // eslint-disable-line react-hooks/set-state-in-effect
     eventService.getAttendanceReport(eventId)
       .then(({ data }) => setRecords(data.data))
       .catch(() => { /* use mock */ })
@@ -114,7 +114,7 @@ const AttendanceReportPage: React.FC = () => {
           { label: 'Absent / No Show', value: stats.absent, icon: <XCircle size={18} className="text-red-600"/>, bg: 'bg-red-50' },
         ].map((s) => (
           <Card key={s.label} className="flex items-center gap-3">
-            <div className={cn('w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0', s.bg)}>{s.icon}</div>
+            <div className={cn('w-10 h-10 rounded-xl flex items-center justify-center shrink-0', s.bg)}>{s.icon}</div>
             <div>
               <p className="text-xl font-black text-gray-900">{s.value}</p>
               <p className="text-xs text-gray-500">{s.label}</p>

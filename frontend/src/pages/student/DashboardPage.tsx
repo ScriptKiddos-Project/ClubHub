@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Zap, TrendingUp, Calendar, Clock, ChevronRight, CheckSquare, Users, Star } from 'lucide-react';
+import { Zap, Calendar, ChevronRight, CheckSquare, Users } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { useAuthStore } from '../../store/authStore';
 import { userService } from '../../services/userService';
 import { Button } from '../../components/ui/Button';
 import { Card, Spinner, Badge, ProgressBar, Avatar } from '../../components/ui';
 import { EventCard } from '../../components/events/EventCard';
-import { formatDate, formatRelative, cn } from '../../utils';
+import { cn } from '../../utils';
 import type { DashboardData } from '../../types';
 
 const MOCK_CHART = [
@@ -15,18 +15,7 @@ const MOCK_CHART = [
   { month: 'Oct', count: 7 }, { month: 'Nov', count: 4 }, { month: 'Dec', count: 6 },
 ];
 
-const StatCard: React.FC<{ label: string; value: string | number; icon: React.ReactNode; color: string; sub?: string }> = ({ label, value, icon, color, sub }) => (
-  <Card className="flex items-center gap-4">
-    <div className={cn('w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0', color)}>
-      {icon}
-    </div>
-    <div>
-      <p className="text-2xl font-bold text-gray-900">{value}</p>
-      <p className="text-sm text-gray-500">{label}</p>
-      {sub && <p className="text-xs text-indigo-600 font-medium mt-0.5">{sub}</p>}
-    </div>
-  </Card>
-);
+
 
 const DashboardPage: React.FC = () => {
   const { user } = useAuthStore();
@@ -184,7 +173,7 @@ const DashboardPage: React.FC = () => {
               { date: '02', month: 'NOV', label: 'Film Society Screening', sub: 'RSVP deadline for reserved seats', color: 'bg-green-500' },
             ].map((d) => (
               <div key={d.label} className="flex items-center gap-3">
-                <div className={cn('w-10 h-10 rounded-xl flex flex-col items-center justify-center text-white flex-shrink-0', d.color)}>
+                <div className={cn('w-10 h-10 rounded-xl flex flex-col items-center justify-center text-white shrink-0', d.color)}>
                   <span className="text-xs font-bold leading-none">{d.month}</span>
                   <span className="text-sm font-bold leading-none">{d.date}</span>
                 </div>

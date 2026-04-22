@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Users, BookOpen, CheckCircle, XCircle, Clock, TrendingUp, Award, Globe } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { clubService } from '../../services/clubService';
-import { Card, Badge, Avatar, Spinner } from '../../components/ui';
+import { Card, Badge, Avatar } from '../../components/ui';
 import { Button } from '../../components/ui/Button';
 import { cn } from '../../utils';
 import toast from 'react-hot-toast';
@@ -44,7 +44,7 @@ const categoryLabel: Record<string, string> = {
 
 const SuperAdminPage: React.FC = () => {
   const [pendingClubs, setPendingClubs] = useState<Club[]>(MOCK_PENDING);
-  const [loading, setLoading] = useState(false);
+
   const [activeTab, setActiveTab] = useState<'overview' | 'clubs' | 'users' | 'access-codes'>('overview');
   const [processing, setProcessing] = useState<string | null>(null);
 
@@ -109,7 +109,7 @@ const SuperAdminPage: React.FC = () => {
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             {GLOBAL_STATS.map((s) => (
               <Card key={s.label} className="flex items-center gap-3">
-                <div className={cn('w-11 h-11 rounded-2xl flex items-center justify-center flex-shrink-0', s.bg)}>{s.icon}</div>
+                <div className={cn('w-11 h-11 rounded-2xl flex items-center justify-center shrink-0', s.bg)}>{s.icon}</div>
                 <div>
                   <p className="text-xl font-black text-gray-900">{s.value}</p>
                   <p className="text-xs text-gray-500 leading-tight">{s.label}</p>
@@ -168,7 +168,7 @@ const SuperAdminPage: React.FC = () => {
               <Card key={club.id}>
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex items-start gap-4 flex-1 min-w-0">
-                    <div className="w-12 h-12 rounded-xl bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold text-xl flex-shrink-0">
+                    <div className="w-12 h-12 rounded-xl bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold text-xl shrink-0">
                       {club.name[0]}
                     </div>
                     <div className="min-w-0">
@@ -180,7 +180,7 @@ const SuperAdminPage: React.FC = () => {
                       <p className="text-sm text-gray-500 mt-1">{club.description}</p>
                     </div>
                   </div>
-                  <div className="flex gap-2 flex-shrink-0">
+                  <div className="flex gap-2 shrink-0">
                     <Button
                       size="sm"
                       variant="danger"

@@ -32,7 +32,7 @@ export const authenticate = (
 
     // Explicitly extract — don't leak iat/exp/other claims into req.user
     req.user = {
-      id: (payload as any).userId ?? payload.id,
+      id: (payload as AuthenticatedUser & { userId?: string }).userId ?? payload.id,
       email: payload.email,
       role: payload.role,
       name: payload.name,
@@ -48,4 +48,36 @@ export const authenticate = (
     }
     sendError(res, 401, "TOKEN_INVALID", "Invalid access token");
   }
+};
+
+export const authenticateOptional = (
+  req: Request,
+  _res: Response,
+  next: NextFunction
+): void => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader?.startsWith("Bearer ")) {
+    next();
+    return;
+  }
+
+  const token = authHeader.slice(7);
+
+  try {
+    const payload = jwt.verify(token, JWT_ACCESS_SECRET) as AuthenticatedUser & {
+      iat: number;
+      exp: number;
+    };
+
+    req.user = {
+      id: (payload as AuthenticatedUser & { userId?: string }).userId ?? payload.id,
+      email: payload.email,
+      role: payload.role,
+      name: payload.name,
+    };
+  } catch {
+    req.user = undefined;
+  }
+
+  next();
 };

@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { Filter, Plus, ChevronDown, Sliders } from 'lucide-react';
+import { Filter, Plus, ChevronDown } from 'lucide-react';
 import { useEvents } from '../../hooks/useEvents';
 import { EventCard } from '../../components/events/EventCard';
 import { Button } from '../../components/ui/Button';
-import { Card, Badge, CardSkeleton, EmptyState } from '../../components/ui';
-import { cn, categoryColor } from '../../utils';
+import { CardSkeleton, EmptyState } from '../../components/ui';
+import { cn } from '../../utils';
 import type { Event } from '../../types';
 
 const CATEGORIES = ['Technology', 'Arts & Culture', 'Sports', 'Career Prep', 'Development', 'Academic'];
@@ -24,7 +24,7 @@ const EventsPage: React.FC = () => {
   const [timeFrame, setTimeFrame] = useState('This Weekend');
   const [activeTab, setActiveTab] = useState('All Events');
   const [activePop, setActivePop] = useState('Trending');
-  const [sortBy, setSortBy] = useState('DATE');
+
 
   const { events, loading, registerForEvent, unregisterFromEvent } = useEvents({
     search: searchParams.get('search') ?? undefined,
@@ -38,7 +38,7 @@ const EventsPage: React.FC = () => {
   return (
     <div className="flex h-full">
       {/* Sidebar filters */}
-      <aside className="hidden lg:flex w-52 flex-col border-r border-gray-100 bg-white px-4 py-5 flex-shrink-0 space-y-5">
+      <aside className="hidden lg:flex w-52 flex-col border-r border-gray-100 bg-white px-4 py-5 shrink-0 space-y-5">
         <div>
           <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Discovery Filters</h3>
         </div>

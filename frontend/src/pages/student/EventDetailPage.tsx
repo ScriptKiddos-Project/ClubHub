@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import {
   ArrowLeft, Calendar, Clock, MapPin, Users, Bookmark, Share2,
@@ -8,7 +8,7 @@ import { useEvent } from '../../hooks/useEvents';
 import { eventService } from '../../services/eventService';
 import { useAuthStore } from '../../store/authStore';
 import { Button } from '../../components/ui/Button';
-import { Card, Badge, Avatar, AvatarGroup, ProgressBar, Spinner, EmptyState } from '../../components/ui';
+import { Card, Badge, AvatarGroup, ProgressBar, Spinner } from '../../components/ui';
 import { cn, formatDate, formatTime, categoryColor, spotsLeft } from '../../utils';
 import toast from 'react-hot-toast';
 import type { Event } from '../../types';
@@ -64,6 +64,10 @@ const EventDetailPage: React.FC = () => {
   const isFull = spots <= 0;
   const isOrganizer = user?.role === 'event_manager' || user?.role === 'secretary' || user?.role === 'super_admin';
 
+  useEffect(() => {
+    setIsRegistered(event.isRegistered ?? false);
+  }, [event.isRegistered]);
+
   const handleRegister = async () => {
     setRegistering(true);
     try {
@@ -106,9 +110,9 @@ const EventDetailPage: React.FC = () => {
       </button>
 
       {/* Hero */}
-      <div className="relative w-full h-64 sm:h-80 rounded-2xl overflow-hidden bg-gradient-to-br from-indigo-900 to-purple-900">
+      <div className="relative w-full h-64 sm:h-80 rounded-2xl overflow-hidden bg-linear-to-br from-indigo-900 to-purple-900">
         {event.heroImageUrl && <img src={event.heroImageUrl} alt={event.title} className="w-full h-full object-cover opacity-70"/>}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"/>
+        <div className="absolute inset-0 bg-linear-to-t from-black/60 via-transparent to-transparent"/>
 
         {/* Badges top-left */}
         <div className="absolute top-4 left-4 flex flex-wrap gap-2">
@@ -316,7 +320,7 @@ const EventDetailPage: React.FC = () => {
             <Card>
               <h3 className="font-bold text-gray-900 mb-3 text-sm">Hosted by</h3>
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-xl bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold text-lg flex-shrink-0">
+                <div className="w-12 h-12 rounded-xl bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold text-lg shrink-0">
                   {event.club.name[0]}
                 </div>
                 <div className="min-w-0">
@@ -340,7 +344,7 @@ const EventDetailPage: React.FC = () => {
             <div className="space-y-3">
               {MOCK_SIMILAR.map((e) => (
                 <Link key={e.id} to={`/events/${e.id}`} className="flex items-center gap-3 group">
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-400 to-purple-500 flex-shrink-0"/>
+                  <div className="w-12 h-12 rounded-xl bg-linear-to-br from-indigo-400 to-purple-500 shrink-0"/>
                   <div className="min-w-0">
                     <p className="text-sm font-semibold text-gray-900 group-hover:text-indigo-600 transition-colors line-clamp-1">{e.title}</p>
                     <p className="text-xs text-gray-500">{formatDate(e.date)}</p>

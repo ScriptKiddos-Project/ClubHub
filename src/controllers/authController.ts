@@ -101,6 +101,7 @@ export async function resetPassword(req: Request, res: Response, next: NextFunct
 export async function coreJoin(req: Request, res: Response, next: NextFunction) {
   try {
     const result = await authService.coreJoin(req.body);
+    res.cookie('refresh_token', result.refreshToken, COOKIE_OPTIONS);
     sendSuccess(res, result, result.message);
   } catch (error) {
     next(error);

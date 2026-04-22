@@ -7,6 +7,7 @@ import { rbac } from "../middleware/rbac";
 import { validate } from "../middleware/validate";
 import { approveClubSchema } from "../validators/club.validator";
 import * as clubController from "../controllers/clubController";
+import * as analyticsController from "../controllers/analyticsController";
 
 const router = Router();
 
@@ -26,11 +27,6 @@ router.put(
 
 // ─── Analytics (stub — implemented fully in Phase 1D) ─────────────────────────
 // GET /api/v1/admin/analytics
-router.get("/analytics", (_req, res) => {
-  res.status(501).json({
-    success: false,
-    error: { code: "NOT_IMPLEMENTED", message: "Analytics implemented in Phase 1D" },
-  });
-});
+router.get("/analytics", analyticsController.getGlobalAnalytics);
 
 export default router;

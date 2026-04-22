@@ -14,6 +14,7 @@ import {
   CalendarResponse,
   CalendarEvent,
   StudentDashboard,
+  ClubListItem,
 } from "../types";
 import { sendEventCancellationEmail, sendEventRegistrationEmail } from "./emailService";
 import { createNotification } from "./notificationService";
@@ -311,7 +312,7 @@ export async function updateEvent(
     updateData.pin_attendance_enabled = input.pin_attendance_enabled;
   if (input.banner_url !== undefined) updateData.banner_url = input.banner_url;
 
-  const updated = await prisma.event.update({
+  const _updated = await prisma.event.update({
     where: { id: eventId },
     data: updateData,
     include: { club: { select: { name: true, logo_url: true } } },
@@ -609,7 +610,7 @@ export async function getStudentDashboard(userId: string): Promise<StudentDashbo
 
   return {
     user,
-    my_clubs: userClubs.map((uc) => (uc as any).club),
+    my_clubs: userClubs.map((uc) => (uc as unknown as { club: ClubListItem }).club),
     upcoming_events: upcomingEvents,
     stats: {
       clubs_joined: userClubs.length,

@@ -5,6 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Upload, Zap, ChevronRight, ArrowLeft } from 'lucide-react';
 import { eventService } from '../../services/eventService';
+import { useClubs } from '../../hooks/useClubs';
 import { Button } from '../../components/ui/Button';
 import { Input, Select, Textarea } from '../../components/ui/Input';
 import { Card, Badge } from '../../components/ui';
@@ -34,6 +35,7 @@ const CreateEventPage: React.FC = () => {
   const [step, setStep] = useState(0);
   const [loading, setLoading] = useState(false);
   const [heroPreview, setHeroPreview] = useState<string | null>(null);
+  const { clubs } = useClubs();
 
   const { register, handleSubmit, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(schema) as never,
@@ -110,7 +112,10 @@ const CreateEventPage: React.FC = () => {
               <Textarea label="Description" rows={4} placeholder="Tell the campus why they shouldn't miss this..." error={errors.description?.message} {...register('description')}/>
               <div className="grid grid-cols-2 gap-3">
                 <Select label="Club" error={errors.clubId?.message}
-                  options={[{ value:'',label:'Select club' },{ value:'ai',label:'AI Research Club' },{ value:'tech',label:'Tech Innovators' }]}
+                  options={[
+                    { value:'',label:'Select club' },
+                    ...clubs.map((club) => ({ value: club.id, label: club.name })),
+                  ]}
                   {...register('clubId')}/>
                 <Select label="Event Type" options={[
                   { value:'workshop',label:'Workshop' },{ value:'seminar',label:'Seminar' },
@@ -139,7 +144,7 @@ const CreateEventPage: React.FC = () => {
         </form>
 
         <div className="space-y-4">
-          <Card className="border-indigo-100 bg-gradient-to-b from-indigo-50/50 to-white">
+          <Card className="border-indigo-100 bg-linear-to-b from-indigo-50/50 to-white">
             <div className="flex items-center gap-2 mb-3">
               <div className="w-7 h-7 bg-indigo-600 rounded-xl flex items-center justify-center"><Zap size={14} className="text-white"/></div>
               <h3 className="font-bold text-gray-900">AI Strategy Hub</h3>
@@ -170,7 +175,7 @@ const CreateEventPage: React.FC = () => {
             </div>
           </Card>
           <div className="relative bg-gray-900 rounded-2xl overflow-hidden p-4">
-            <div className="absolute inset-0 bg-gradient-to-br from-indigo-900/80 to-purple-900/80"/>
+            <div className="absolute inset-0 bg-linear-to-br from-indigo-900/80 to-purple-900/80"/>
             <div className="relative z-10">
               <Badge variant="danger" className="mb-2">LIVE INSIGHT</Badge>
               <p className="text-white text-sm font-medium">34 students recently searched for "Networking Events" on campus.</p>

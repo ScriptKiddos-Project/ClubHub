@@ -2,9 +2,9 @@ import React from 'react';
 import { TrendingUp, Calendar, Award, Clock } from 'lucide-react';
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
-  LineChart, Line, CartesianGrid, PieChart, Pie, Cell, Legend
+  LineChart, Line, CartesianGrid, PieChart, Pie, Cell
 } from 'recharts';
-import { Card, ProgressBar, Badge } from '../../components/ui';
+import { Card, ProgressBar } from '../../components/ui';
 
 const MONTHLY_DATA = [
   { month: 'Jul', events: 2, points: 80 }, { month: 'Aug', events: 5, points: 210 },
@@ -27,7 +27,7 @@ const POINTS_HISTORY = [
 
 const StatCard: React.FC<{ icon: React.ReactNode; label: string; value: string; sub: string; color: string }> = ({ icon, label, value, sub, color }) => (
   <Card className="flex items-center gap-4">
-    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 ${color}`}>{icon}</div>
+    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 ${color}`}>{icon}</div>
     <div>
       <p className="text-2xl font-bold text-gray-900">{value}</p>
       <p className="text-sm text-gray-500">{label}</p>
@@ -79,7 +79,7 @@ const AnalyticsPage: React.FC = () => (
         <div className="space-y-2 mt-2">
           {CATEGORY_DATA.map((d) => (
             <div key={d.name} className="flex items-center gap-2">
-              <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: d.color }}/>
+              <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: d.color }}/>
               <span className="text-xs text-gray-600 flex-1">{d.name}</span>
               <span className="text-xs font-bold text-gray-900">{d.value}%</span>
             </div>

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Download, Star, Flame, Shield, Globe, Mic, Users, Code, Heart } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 import { Button } from '../../components/ui/Button';
-import { Card, Badge, Avatar, ProgressBar } from '../../components/ui';
+import { Card, Avatar, ProgressBar } from '../../components/ui';
 import { cn } from '../../utils';
 
 const MOCK_EXPERIENCE = [
@@ -43,7 +43,7 @@ const MOCK_BADGES = [
 
 const ProfilePage: React.FC = () => {
   const { user } = useAuthStore();
-  const [activeTab, setActiveTab] = useState('experience');
+
 
   const name = user?.name ?? 'Marcus Thorne';
   const dept = user?.department ?? 'Computer Science';
@@ -93,7 +93,7 @@ const ProfilePage: React.FC = () => {
                 <div className="absolute left-0 top-2 w-2 h-2 rounded-full bg-indigo-600"/>
                 <div className="flex items-start justify-between gap-2">
                   <h3 className="font-bold text-gray-900 text-sm">{exp.title}</h3>
-                  <span className="text-xs text-gray-400 whitespace-nowrap flex-shrink-0">
+                  <span className="text-xs text-gray-400 whitespace-nowrap shrink-0">
                     {exp.startDate} — {exp.isCurrent ? 'PRESENT' : exp.endDate}
                   </span>
                 </div>
@@ -150,7 +150,7 @@ const ProfilePage: React.FC = () => {
           </Card>
 
           {/* Next milestone */}
-          <Card className="bg-gradient-to-br from-indigo-50 to-purple-50 border-indigo-100">
+          <Card className="bg-linear-to-br from-indigo-50 to-purple-50 border-indigo-100">
             <p className="text-xs font-bold text-indigo-600 uppercase tracking-wider mb-1">Next Milestone</p>
             <h3 className="font-bold text-gray-900 text-base">Silver Key Academic Honor Society</h3>
             <p className="text-xs text-gray-500 mt-2 flex items-center gap-1.5">

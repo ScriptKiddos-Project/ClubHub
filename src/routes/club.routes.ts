@@ -2,7 +2,7 @@
 // Club routes — applies middleware + maps to controllers.
 
 import { Router } from "express";
-import { authenticate } from "../middleware/auth";
+import { authenticate, authenticateOptional } from "../middleware/auth";
 import { rbac } from "../middleware/rbac";
 import { validate } from "../middleware/validate";
 import {
@@ -12,6 +12,7 @@ import {
   clubIdParamSchema,
 } from "../validators/club.validator";
 import * as clubController from "../controllers/clubController";
+import * as analyticsController from "../controllers/analyticsController";
 
 const router = Router();
 
@@ -20,7 +21,7 @@ const router = Router();
 // GET /api/v1/clubs — list approved clubs (any authenticated user)
 router.get(
   "/",
-  authenticate,
+  authenticateOptional,
   validate(listClubsSchema),
   clubController.listClubs
 );
@@ -28,9 +29,16 @@ router.get(
 // GET /api/v1/clubs/:id — club detail
 router.get(
   "/:id",
-  authenticate,
+  authenticateOptional,
   validate(clubIdParamSchema),
   clubController.getClub
+);
+
+router.get(
+  "/:id/analytics",
+  authenticate,
+  validate(clubIdParamSchema),
+  analyticsController.getClubAnalytics
 );
 
 // POST /api/v1/clubs — create club (any authenticated; goes to pending approval)

@@ -4,6 +4,11 @@ import { NotificationType } from "@prisma/client";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
+interface ServiceError extends Error {
+  statusCode: number;
+  code: string;
+}
+
 interface CreateNotificationOptions {
   userId: string;
   title: string;
@@ -97,14 +102,14 @@ export async function markNotificationRead(
   });
 
   if (!notification) {
-    const err = new Error("Notification not found") as any;
+    const err = new Error("Notification not found") as ServiceError;
     err.statusCode = 404;
     err.code = "NOT_FOUND";
     throw err;
   }
 
   if (notification.user_id !== userId) {
-    const err = new Error("Access denied") as any;
+    const err = new Error("Access denied") as ServiceError;
     err.statusCode = 403;
     err.code = "FORBIDDEN";
     throw err;
@@ -140,14 +145,14 @@ export async function deleteNotificationById(
   });
 
   if (!notification) {
-    const err = new Error("Notification not found") as any;
+    const err = new Error("Notification not found") as ServiceError;
     err.statusCode = 404;
     err.code = "NOT_FOUND";
     throw err;
   }
 
   if (notification.user_id !== userId) {
-    const err = new Error("Access denied") as any;
+    const err = new Error("Access denied") as ServiceError;
     err.statusCode = 403;
     err.code = "FORBIDDEN";
     throw err;

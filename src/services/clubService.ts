@@ -19,7 +19,8 @@ import {
 
 // ─── List approved clubs with pagination ──────────────────────────────────────
 export async function listClubs(
-  filters: ClubFilters
+  filters: ClubFilters,
+  userId?: string
 ): Promise<PaginatedResponse<ClubListItem>> {
   const { page = 1, limit = 20, category, search } = filters;
   const skip = (page - 1) * limit;
@@ -54,8 +55,22 @@ export async function listClubs(
     prisma.club.count({ where }),
   ]);
 
+  const memberships = userId
+    ? await prisma.userClub.findMany({
+        where: {
+          user_id: userId,
+          club_id: { in: clubs.map((club) => club.id) },
+        },
+        select: { club_id: true },
+      })
+    : [];
+  const joinedClubIds = new Set(memberships.map((membership) => membership.club_id));
+
   return {
-    data: clubs,
+    data: clubs.map((club) => ({
+      ...club,
+      is_member: joinedClubIds.has(club.id),
+    })),
     meta: {
       total,
       page,

@@ -1,9 +1,9 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Clock, Users, Bookmark, Zap, Flame, TrendingUp } from 'lucide-react';
-import { cn, formatDate, formatTime, categoryColor, spotsLeft, truncate } from '../../utils';
-import { Badge, Avatar, AvatarGroup } from '../ui';
-import { Button } from '../ui/Button';
+import { formatDate, formatTime, truncate } from '../../utils';
+import { Badge, AvatarGroup } from '../ui';
+
 import type { Event } from '../../types';
 
 interface EventCardProps {
@@ -19,8 +19,8 @@ const categoryLabel: Record<string, string> = {
   development: 'Development', creative_arts: 'Creative Arts',
 };
 
-export const EventCard: React.FC<EventCardProps> = ({ event, onRegister, onUnregister, variant = 'default' }) => {
-  const spots = spotsLeft(event.capacity, event.registrationCount);
+export const EventCard: React.FC<EventCardProps> = ({ event, variant = 'default', onRegister, onUnregister }) => {
+  const spots = event.capacity - event.registrationCount;
   const pct = (event.registrationCount / event.capacity) * 100;
 
   if (variant === 'featured') {

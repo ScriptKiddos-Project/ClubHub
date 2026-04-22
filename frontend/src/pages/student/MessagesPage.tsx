@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Search, Phone, MoreVertical, Send, Plus, Smile, AlertTriangle, AtSign, Zap } from 'lucide-react';
-import { Avatar, Badge, Card } from '../../components/ui';
+import { Avatar } from '../../components/ui';
 import { cn } from '../../utils';
 
 const MOCK_ROOMS = [
@@ -30,7 +30,7 @@ const MessagesPage: React.FC = () => {
   return (
     <div className="flex h-full bg-gray-50">
       {/* Rooms sidebar */}
-      <aside className="w-72 bg-white border-r border-gray-100 flex flex-col flex-shrink-0">
+      <aside className="w-72 bg-white border-r border-gray-100 flex flex-col shrink-0">
         <div className="p-4 border-b border-gray-100">
           <h2 className="text-xl font-bold text-gray-900 mb-3">Messages</h2>
           <div className="relative">
@@ -54,7 +54,7 @@ const MessagesPage: React.FC = () => {
           {MOCK_ROOMS.map((room) => (
             <button key={room.id} onClick={() => setActiveRoom(room)}
               className={cn('w-full px-4 py-3.5 flex items-center gap-3 hover:bg-gray-50 transition-colors text-left', activeRoom.id === room.id && 'bg-indigo-50')}>
-              <div className="relative flex-shrink-0">
+              <div className="relative shrink-0">
                 <div className="w-11 h-11 rounded-2xl bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold text-sm">
                   {room.name[0]}
                 </div>
@@ -63,11 +63,11 @@ const MessagesPage: React.FC = () => {
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between">
                   <p className="font-semibold text-gray-900 text-sm truncate">{room.name}</p>
-                  <span className="text-xs text-gray-400 flex-shrink-0 ml-2">{room.lastMessage?.timestamp}</span>
+                  <span className="text-xs text-gray-400 shrink-0 ml-2">{room.lastMessage?.timestamp}</span>
                 </div>
                 <p className={cn('text-xs mt-0.5 truncate', room.lastMessage?.isRead ? 'text-gray-500' : 'text-gray-900 font-medium')}>{room.lastMessage?.content}</p>
               </div>
-              {!room.lastMessage?.isRead && <div className="w-2 h-2 bg-indigo-500 rounded-full flex-shrink-0"/>}
+              {!room.lastMessage?.isRead && <div className="w-2 h-2 bg-indigo-500 rounded-full shrink-0"/>}
             </button>
           ))}
         </div>
@@ -76,7 +76,7 @@ const MessagesPage: React.FC = () => {
       {/* Chat window */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Chat header */}
-        <div className="h-14 bg-white border-b border-gray-100 flex items-center px-4 gap-3 flex-shrink-0">
+        <div className="h-14 bg-white border-b border-gray-100 flex items-center px-4 gap-3 shrink-0">
           <div className="w-9 h-9 rounded-xl bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold text-sm">{activeRoom.name[0]}</div>
           <div>
             <p className="font-bold text-gray-900 text-sm">{activeRoom.name}</p>
@@ -97,15 +97,15 @@ const MessagesPage: React.FC = () => {
           {MOCK_MESSAGES.map((msg) => (
             <div key={msg.id} className="space-y-1">
               <div className="flex items-end gap-2.5 max-w-lg">
-                <Avatar name={msg.sender.name} size="sm" className="flex-shrink-0"/>
+                <Avatar name={msg.sender.name} size="sm" className="shrink-0"/>
                 <div>
                   <p className="text-xs text-gray-400 mb-1 ml-1">{msg.sender.name}</p>
                   <div className="bg-white border border-gray-100 rounded-2xl rounded-bl-sm px-4 py-3 shadow-sm">
                     <p className="text-sm text-gray-800">{msg.content}</p>
                     {msg.imageUrl && (
                       <div className="mt-2 grid grid-cols-2 gap-2">
-                        <div className="h-32 bg-gray-200 rounded-xl overflow-hidden"><div className="w-full h-full bg-gradient-to-br from-gray-300 to-gray-400"/></div>
-                        <div className="h-32 bg-gray-200 rounded-xl overflow-hidden"><div className="w-full h-full bg-gradient-to-br from-gray-400 to-gray-500"/></div>
+                        <div className="h-32 bg-gray-200 rounded-xl overflow-hidden"><div className="w-full h-full bg-linear-to-br from-gray-300 to-gray-400"/></div>
+                        <div className="h-32 bg-gray-200 rounded-xl overflow-hidden"><div className="w-full h-full bg-linear-to-br from-gray-400 to-gray-500"/></div>
                       </div>
                     )}
                   </div>
@@ -139,7 +139,7 @@ const MessagesPage: React.FC = () => {
       </div>
 
       {/* Activity Glass sidebar */}
-      <aside className="hidden xl:flex w-72 bg-white border-l border-gray-100 flex-col p-4 flex-shrink-0">
+      <aside className="hidden xl:flex w-72 bg-white border-l border-gray-100 flex-col p-4 shrink-0">
         <h3 className="font-bold text-gray-900 mb-4">Activity Glass</h3>
         {/* Upcoming event */}
         <div className="bg-indigo-50 rounded-2xl p-4 mb-4">
@@ -162,7 +162,7 @@ const MessagesPage: React.FC = () => {
         <div className="space-y-3">
           {RECENT_UPDATES.map((u) => (
             <div key={u.id} className="flex items-start gap-3">
-              <div className={cn('w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0', u.iconBg)}>{u.icon}</div>
+              <div className={cn('w-8 h-8 rounded-xl flex items-center justify-center shrink-0', u.iconBg)}>{u.icon}</div>
               <div className="min-w-0">
                 <p className="text-xs font-semibold text-gray-900">{u.title}</p>
                 <p className="text-xs text-gray-500 leading-relaxed">{u.desc}</p>

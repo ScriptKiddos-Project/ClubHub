@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
-import { ArrowLeft, Users, Calendar, Globe, ExternalLink, BarChart2, Settings, ChevronRight } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { ArrowLeft, Users, Calendar, Globe, ExternalLink, Settings } from 'lucide-react';
 import { useClub } from '../../hooks/useClubs';
 import { useEvents } from '../../hooks/useEvents';
 import { clubService } from '../../services/clubService';
@@ -8,7 +8,7 @@ import { useAuthStore } from '../../store/authStore';
 import { Button } from '../../components/ui/Button';
 import { Card, Badge, Avatar, Spinner, EmptyState } from '../../components/ui';
 import { EventCard } from '../../components/events/EventCard';
-import { cn, categoryColor, formatDate } from '../../utils';
+import { cn, categoryColor } from '../../utils';
 import toast from 'react-hot-toast';
 import type { Club } from '../../types';
 
@@ -61,6 +61,10 @@ const ClubDetailPage: React.FC = () => {
 
   const isManager = user?.role === 'secretary' || user?.role === 'event_manager' || user?.role === 'super_admin';
 
+  useEffect(() => {
+    setIsJoined(club.isJoined ?? false);
+  }, [club.isJoined]);
+
   const handleJoinLeave = async () => {
     setJoining(true);
     try {
@@ -91,14 +95,14 @@ const ClubDetailPage: React.FC = () => {
       </button>
 
       {/* Hero banner */}
-      <div className="relative w-full h-48 rounded-2xl overflow-hidden bg-gradient-to-br from-indigo-600 to-purple-700">
+      <div className="relative w-full h-48 rounded-2xl overflow-hidden bg-linear-to-br from-indigo-600 to-purple-700">
         {club.bannerUrl && <img src={club.bannerUrl} alt="" className="w-full h-full object-cover opacity-60"/>}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent"/>
+        <div className="absolute inset-0 bg-linear-to-t from-black/40 to-transparent"/>
       </div>
 
       {/* Club header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-end gap-4 -mt-10 relative z-10 px-2">
-        <div className="w-20 h-20 rounded-2xl bg-white border-4 border-white shadow-xl overflow-hidden flex items-center justify-center text-indigo-700 font-black text-3xl flex-shrink-0">
+        <div className="w-20 h-20 rounded-2xl bg-white border-4 border-white shadow-xl overflow-hidden flex items-center justify-center text-indigo-700 font-black text-3xl shrink-0">
           {club.logoUrl ? <img src={club.logoUrl} alt={club.name} className="w-full h-full object-cover"/> : club.name[0]}
         </div>
         <div className="flex-1 min-w-0">
@@ -118,7 +122,7 @@ const ClubDetailPage: React.FC = () => {
             )}
           </div>
         </div>
-        <div className="flex items-center gap-2 flex-shrink-0">
+        <div className="flex items-center gap-2 shrink-0">
           {isManager && (
             <Button size="sm" variant="outline" leftIcon={<Settings size={14}/>}
               onClick={() => navigate('/management')}>

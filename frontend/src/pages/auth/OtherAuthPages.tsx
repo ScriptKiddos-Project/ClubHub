@@ -5,6 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Mail, Lock, CheckCircle, Key } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
+import { useClubs } from '../../hooks/useClubs';
 import { Button } from '../../components/ui/Button';
 import { Input, Select } from '../../components/ui/Input';
 
@@ -154,6 +155,7 @@ type CoreData = z.infer<typeof coreSchema>;
 export const CoreJoinPage: React.FC = () => {
   const { handleCoreJoin } = useAuth();
   const [loading, setLoading] = useState(false);
+  const { clubs } = useClubs();
   const { register, handleSubmit, formState: { errors } } = useForm<CoreData>({ resolver: zodResolver(coreSchema) });
 
   const onSubmit = async (data: CoreData) => {
@@ -176,7 +178,10 @@ export const CoreJoinPage: React.FC = () => {
         <Input label="Full Name" placeholder="Your name" error={errors.name?.message} {...register('name')}/>
         <Input label="Email" type="email" placeholder="you@campus.edu" error={errors.email?.message} {...register('email')}/>
         <Select label="Club" error={errors.clubId?.message}
-          options={[{ value: '', label: 'Select your club' }, { value: 'tech', label: 'Tech Club' }, { value: 'ai', label: 'AI Research Club' }]}
+          options={[
+            { value: '', label: 'Select your club' },
+            ...clubs.map((club) => ({ value: club.id, label: club.name })),
+          ]}
           {...register('clubId')}/>
         <Select label="Role" error={errors.role?.message}
           options={[

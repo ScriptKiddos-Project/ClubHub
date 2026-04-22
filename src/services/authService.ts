@@ -334,8 +334,41 @@ export async function coreJoin(data: {
     tenureEnd: formatDate(accessCode.community.tenure_end),
   }).catch((err) => console.error('⚠️  Welcome email failed (non-fatal):', err.message));
 
+  const updatedUser = await prisma.user.findUniqueOrThrow({
+    where: { id: user.id },
+    select: {
+      id: true,
+      email: true,
+      name: true,
+      role: true,
+      is_verified: true,
+      total_points: true,
+      avatar_url: true,
+    },
+  });
+
+  const accessToken = signAccessToken({
+    userId: updatedUser.id,
+    email: updatedUser.email,
+    role: updatedUser.role,
+  });
+  const refreshToken = signRefreshToken({
+    userId: updatedUser.id,
+    email: updatedUser.email,
+    role: updatedUser.role,
+  });
+
+  const refreshTokenHash = await hashToken(refreshToken);
+  await prisma.user.update({
+    where: { id: updatedUser.id },
+    data: { refresh_token_hash: refreshTokenHash },
+  });
+
   return {
     message: 'Successfully joined as core member',
+    accessToken,
+    refreshToken,
+    user: updatedUser,
     role: assignedRole,
     club: { id: club.id, name: club.name },
   };

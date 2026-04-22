@@ -2,7 +2,6 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Users, Calendar } from 'lucide-react';
 import { cn, categoryColor } from '../../utils';
-import { Badge } from '../ui';
 import { Button } from '../ui/Button';
 import type { Club } from '../../types';
 

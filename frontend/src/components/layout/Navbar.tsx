@@ -8,12 +8,7 @@ import { useNotifications } from '../../hooks/useNotifications';
 import { useAuth } from '../../hooks/useAuth';
 import { Avatar, Badge } from '../ui';
 
-const notifTypeColor: Record<string, string> = {
-  event_reminder: 'bg-blue-100 text-blue-700',
-  points_awarded:  'bg-green-100 text-green-700',
-  announcement:    'bg-purple-100 text-purple-700',
-  club_update:     'bg-amber-100 text-amber-700',
-};
+
 
 export const Navbar: React.FC = () => {
   const { user } = useAuthStore();
@@ -97,7 +92,7 @@ export const Navbar: React.FC = () => {
                     className={cn('px-4 py-3 cursor-pointer hover:bg-gray-50 transition-colors', !n.isRead && 'bg-indigo-50/50')}
                   >
                     <div className="flex items-start gap-3">
-                      <div className={cn('mt-0.5 w-2 h-2 rounded-full flex-shrink-0', n.isRead ? 'bg-transparent' : 'bg-indigo-500')}/>
+                      <div className={cn('mt-0.5 w-2 h-2 rounded-full shrink-0', n.isRead ? 'bg-transparent' : 'bg-indigo-500')}/>
                       <div className="min-w-0">
                         <p className="text-sm font-medium text-gray-900">{n.title}</p>
                         <p className="text-xs text-gray-500 mt-0.5 line-clamp-2">{n.body}</p>

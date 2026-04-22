@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Users, Calendar, TrendingUp, QrCode, Download, CheckSquare, AlertTriangle, Clock } from 'lucide-react';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, LineChart, Line, CartesianGrid } from 'recharts';
+import { XAxis, YAxis, Tooltip, ResponsiveContainer, LineChart, Line, CartesianGrid } from 'recharts';
 import { Card, Badge, Avatar, ProgressBar } from '../../components/ui';
 import { Button } from '../../components/ui/Button';
 import { useAuthStore } from '../../store/authStore';
@@ -63,7 +63,7 @@ const AdminDashboardPage: React.FC = () => {
           { label: 'Pending Approvals', value: '7', icon: <AlertTriangle size={20} className="text-amber-600"/>, bg: 'bg-amber-50', sub: '2 clubs, 5 events' },
         ].map((s) => (
           <Card key={s.label} className="flex items-center gap-3">
-            <div className={cn('w-11 h-11 rounded-2xl flex items-center justify-center flex-shrink-0', s.bg)}>{s.icon}</div>
+            <div className={cn('w-11 h-11 rounded-2xl flex items-center justify-center shrink-0', s.bg)}>{s.icon}</div>
             <div>
               <p className="text-xl font-bold text-gray-900">{s.value}</p>
               <p className="text-xs text-gray-500">{s.label}</p>
@@ -178,7 +178,7 @@ const AdminDashboardPage: React.FC = () => {
                   <p className="text-sm font-semibold text-gray-900 truncate">{c.name}</p>
                   <p className="text-xs text-gray-500 truncate">{c.email}</p>
                 </div>
-                <div className="text-right flex-shrink-0">
+                <div className="text-right shrink-0">
                   <Badge variant={c.method === 'QR' ? 'primary' : c.method === 'PIN' ? 'success' : 'default'} className="text-xs">{c.method}</Badge>
                   <p className="text-xs text-gray-400 mt-0.5 flex items-center gap-1 justify-end"><Clock size={10}/>{c.time}</p>
                 </div>

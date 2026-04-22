@@ -45,6 +45,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ allowedRoles }) 
         })
         .catch(() => setLoading(false));
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // run once on mount only
 
   if (isLoading) return <PageLoader/>;
@@ -58,7 +59,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ allowedRoles }) 
 
 // ─── AUTH LAYOUT (centered card) ─────────────────────────────────────────────
 export const AuthLayout: React.FC = () => (
-  <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 flex">
+  <div className="min-h-screen bg-linear-to-br from-indigo-50 via-white to-purple-50 flex">
     {/* Left brand panel - hidden on mobile */}
     <div
       className="hidden lg:flex lg:w-1/2 flex-col justify-center items-center p-12 relative overflow-hidden"

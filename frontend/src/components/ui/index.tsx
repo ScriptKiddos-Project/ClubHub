@@ -42,7 +42,7 @@ interface AvatarProps {
 const avatarSizes = { xs: 'w-6 h-6 text-xs', sm: 'w-8 h-8 text-xs', md: 'w-10 h-10 text-sm', lg: 'w-12 h-12 text-base', xl: 'w-16 h-16 text-lg' };
 
 export const Avatar: React.FC<AvatarProps> = ({ src, name = '', size = 'md', className }) => (
-  <div className={cn('rounded-full overflow-hidden bg-indigo-100 flex items-center justify-center font-semibold text-indigo-700 flex-shrink-0', avatarSizes[size], className)}>
+  <div className={cn('rounded-full overflow-hidden bg-indigo-100 flex items-center justify-center font-semibold text-indigo-700 shrink-0', avatarSizes[size], className)}>
     {src ? <img src={src} alt={name} className="w-full h-full object-cover" /> : getInitials(name)}
   </div>
 );

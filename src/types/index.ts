@@ -40,6 +40,7 @@ export interface AuthenticatedUser {
   email: string;
   role:  Role;
   name:  string;
+  clubIds?: string[];
 }
 
 declare global {

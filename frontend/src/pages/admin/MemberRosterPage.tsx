@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Search, UserPlus, Mail, Shield, ChevronDown, Download } from 'lucide-react';
-import { Card, Badge, Avatar } from '../../components/ui';
+import { Search, UserPlus, Mail, Shield, Download } from 'lucide-react';
+import { Card, Avatar } from '../../components/ui';
 import { Button } from '../../components/ui/Button';
 import { Modal } from '../../components/ui';
 import { Input, Select } from '../../components/ui/Input';
@@ -32,11 +32,7 @@ const MOCK_MEMBERS: Member[] = [
   { id: '8', name: 'Jordan Lee',      email: 'jordan@campus.edu',  dept: 'Cybersecurity',    role: 'member',        points: 890,  eventsAttended: 7,  joinedAt: 'Oct 2023' },
 ];
 
-const ROLE_CONFIG: Record<MemberRole, { label: string; variant: 'success' | 'warning' | 'primary' }> = {
-  secretary:     { label: 'Secretary',     variant: 'success' },
-  event_manager: { label: 'Event Manager', variant: 'warning' },
-  member:        { label: 'Member',        variant: 'primary' },
-};
+
 
 const MemberRosterPage: React.FC = () => {
   const [members, setMembers] = useState<Member[]>(MOCK_MEMBERS);

@@ -16,7 +16,7 @@ export async function listClubs(req: Request, res: Response, next: NextFunction)
       search: req.query.search as string | undefined,
     };
 
-    const result = await clubService.listClubs(filters);
+    const result = await clubService.listClubs(filters, req.user?.id);
     res.json({ success: true, ...result });
   } catch (err) {
     next(err);

@@ -22,7 +22,7 @@ export const useClubs = (autoFetch = true) => {
   }, []);
 
   useEffect(() => {
-    if (autoFetch) fetchClubs();
+    if (autoFetch) fetchClubs(); // eslint-disable-line react-hooks/set-state-in-effect
   }, [autoFetch, fetchClubs]);
 
   const joinClub = useCallback(async (id: string) => {

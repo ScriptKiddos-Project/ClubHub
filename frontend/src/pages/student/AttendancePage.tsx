@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Wifi, QrCode, CheckCircle, MapPin, Users, Calendar, Clock } from 'lucide-react';
 import { eventService } from '../../services/eventService';
-import { Card, Badge, Avatar, AvatarGroup, Spinner } from '../../components/ui';
+import { Card, Badge, AvatarGroup, Spinner } from '../../components/ui';
 import { Button } from '../../components/ui/Button';
 import { cn, formatDate, formatTime } from '../../utils';
 import toast from 'react-hot-toast';
@@ -25,11 +25,13 @@ const MOCK_FRIENDS = [{ name: 'Alex' }, { name: 'Priya' }, { name: 'Sam' }, { na
 
 const AttendancePage: React.FC = () => {
   const [checkinState, setCheckinState] = useState<CheckinState>('scanning');
-  const [distance, setDistance] = useState(42);
+  const [distance] = useState(42);
   const [showQR, setShowQR] = useState(false);
   const [pin, setPin] = useState('');
   const [qrData, setQrData] = useState<{ imageUrl: string; validUntil: string } | null>(null);
   const [loading, setLoading] = useState(false);
+  const [qrLoading, setQrLoading] = useState(false);
+  const [qrError, setQrError] = useState(false);
 
   // Simulate BLE scanning
   useEffect(() => {
@@ -50,6 +52,23 @@ const AttendancePage: React.FC = () => {
       toast.error('Check-in failed. Please try again.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleShowQR = async () => {
+    if (showQR) { setShowQR(false); return; }
+    setShowQR(true);
+    if (qrData) return; // already fetched
+    setQrError(false);
+    setQrLoading(true);
+    try {
+      const { data } = await eventService.generateQR(MOCK_EVENT.id);
+      setQrData({ imageUrl: data.data.imageUrl, validUntil: data.data.validUntil });
+    } catch {
+      setQrError(true);
+      toast.error('Could not generate QR code. Try the PIN instead.');
+    } finally {
+      setQrLoading(false);
     }
   };
 
@@ -100,7 +119,7 @@ const AttendancePage: React.FC = () => {
 
           {/* Map */}
           <Card noPad className="overflow-hidden">
-            <div className="relative h-52 bg-gradient-to-br from-blue-50 to-indigo-100">
+            <div className="relative h-52 bg-linear-to-br from-blue-50 to-indigo-100">
               {/* Fake map tiles */}
               <div className="absolute inset-0 grid grid-cols-6 grid-rows-4 opacity-30">
                 {Array.from({ length: 24 }).map((_, i) => (
@@ -228,7 +247,7 @@ const AttendancePage: React.FC = () => {
             {/* QR fallback */}
             {checkinState !== 'confirmed' && (
               <button
-                onClick={() => setShowQR(!showQR)}
+                onClick={handleShowQR}
                 className="mt-4 w-full flex items-center gap-3 px-4 py-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors"
               >
                 <div className="w-9 h-9 bg-white rounded-lg border border-gray-200 flex items-center justify-center">
@@ -243,9 +262,44 @@ const AttendancePage: React.FC = () => {
             )}
 
             {showQR && (
-              <div className="mt-3 space-y-3">
-                <div className="border-t border-gray-100 pt-3">
-                  <p className="text-xs font-semibold text-gray-500 uppercase mb-2">Enter PIN</p>
+              <div className="mt-3 space-y-4 border-t border-gray-100 pt-3">
+                {/* QR Code image */}
+                <div>
+                  <p className="text-xs font-semibold text-gray-500 uppercase mb-2">Scan QR Code</p>
+                  <div className="flex flex-col items-center justify-center bg-gray-50 rounded-xl p-4 min-h-[180px]">
+                    {qrLoading && (
+                      <div className="flex flex-col items-center gap-2 text-gray-400">
+                        <Spinner size="md" />
+                        <p className="text-xs">Generating QR code…</p>
+                      </div>
+                    )}
+                    {!qrLoading && qrError && (
+                      <div className="flex flex-col items-center gap-3 text-center">
+                        <QrCode size={36} className="text-gray-300" />
+                        <p className="text-sm text-gray-500">Failed to generate QR code</p>
+                        <Button size="sm" variant="secondary" onClick={() => { setQrData(null); setQrError(false); handleShowQR(); }}>
+                          Retry
+                        </Button>
+                      </div>
+                    )}
+                    {!qrLoading && qrData && (
+                      <>
+                        <img
+                          src={qrData.imageUrl}
+                          alt="Attendance QR Code"
+                          className="w-40 h-40 rounded-lg"
+                        />
+                        <p className="text-xs text-gray-400 mt-2">
+                          Valid until {new Date(qrData.validUntil).toLocaleTimeString()}
+                        </p>
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                {/* PIN fallback */}
+                <div>
+                  <p className="text-xs font-semibold text-gray-500 uppercase mb-2">Or Enter PIN</p>
                   <div className="flex gap-2">
                     <input
                       value={pin}

@@ -3,13 +3,29 @@ import type {
   LoginPayload, RegisterPayload, ForgotPasswordPayload,
   ResetPasswordPayload, CoreJoinPayload, User, ApiResponse
 } from '../types';
+import { normalizeUser } from './normalizers';
 
 export const authService = {
-  login: (payload: LoginPayload) =>
-    api.post<ApiResponse<{ user: User; accessToken: string }>>('/auth/login', payload),
+  login: async (payload: LoginPayload) => {
+    const response = await api.post<ApiResponse<{ user: User; accessToken: string }>>('/auth/login', payload);
+    return {
+      ...response,
+      data: {
+        ...response.data,
+        data: {
+          ...response.data.data,
+          user: normalizeUser(response.data.data.user),
+        },
+      },
+    };
+  },
 
   register: (payload: RegisterPayload) =>
-    api.post<ApiResponse<{ message: string }>>('/auth/register', payload),
+    api.post<ApiResponse<{ message: string }>>('/auth/register', {
+      ...payload,
+      enrollment_year: payload.enrollmentYear,
+      degree_type: payload.degreeType,
+    }),
 
   verifyEmail: (token: string) =>
     api.get<ApiResponse<{ message: string }>>(`/auth/verify-email?token=${token}`),
@@ -26,9 +42,33 @@ export const authService = {
   resetPassword: (payload: ResetPasswordPayload) =>
     api.post<ApiResponse<{ message: string }>>('/auth/reset-password', payload),
 
-  coreJoin: (payload: CoreJoinPayload) =>
-    api.post<ApiResponse<{ user: User; accessToken: string }>>('/auth/core-join', payload),
+  coreJoin: async (payload: CoreJoinPayload) => {
+    const response = await api.post<ApiResponse<{ user: User; accessToken: string }>>('/auth/core-join', {
+      name: payload.name,
+      email: payload.email,
+      club_id: payload.clubId,
+      access_code: payload.accessCode,
+    });
+    return {
+      ...response,
+      data: {
+        ...response.data,
+        data: {
+          ...response.data.data,
+          user: normalizeUser(response.data.data.user),
+        },
+      },
+    };
+  },
 
-  getMe: () =>
-    api.get<ApiResponse<User>>('/users/me'),
+  getMe: async () => {
+    const response = await api.get<ApiResponse<User>>('/users/me');
+    return {
+      ...response,
+      data: {
+        ...response.data,
+        data: normalizeUser(response.data.data),
+      },
+    };
+  },
 };

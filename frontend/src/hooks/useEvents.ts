@@ -39,7 +39,7 @@ export const useEvents = (options: UseEventsOptions = {}) => {
   }, [options.clubId, options.type, options.search]);
 
   useEffect(() => {
-    if (options.autoFetch !== false) fetchEvents(1);
+    if (options.autoFetch !== false) fetchEvents(1); // eslint-disable-line react-hooks/set-state-in-effect
   }, [fetchEvents, options.autoFetch]);
 
   const loadMore = () => { if (page < totalPages) fetchEvents(page + 1); };
@@ -78,7 +78,7 @@ export const useEvent = (id: string) => {
 
   useEffect(() => {
     if (!id) return;
-    setLoading(true);
+    setLoading(true); // eslint-disable-line react-hooks/set-state-in-effect
     eventService.get(id)
       .then(({ data }) => setEvent(data.data))
       .catch(() => setError('Failed to load event'))

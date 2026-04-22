@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Search } from 'lucide-react';
 import { useClubs } from '../../hooks/useClubs';
 import { ClubCard } from '../../components/clubs/ClubCard';
-import { Card, CardSkeleton, EmptyState, Badge } from '../../components/ui';
+import { CardSkeleton, EmptyState, Badge } from '../../components/ui';
 import { cn } from '../../utils';
 import type { Club } from '../../types';
 
