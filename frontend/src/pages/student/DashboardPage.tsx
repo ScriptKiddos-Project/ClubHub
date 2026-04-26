@@ -9,6 +9,9 @@ import { Card, Spinner, Badge, ProgressBar, Avatar } from '../../components/ui';
 import { EventCard } from '../../components/events/EventCard';
 import { cn } from '../../utils';
 import type { DashboardData } from '../../types';
+import { RecommendationCards } from '../../components/ai/RecommendationCards';
+import { CampusTrends } from '../../components/trends/CampusTrends';
+import { PushNotificationOptIn } from '../../components/analytics/PushNotificationOptIn';
 
 const MOCK_CHART = [
   { month: 'Jul', count: 2 }, { month: 'Aug', count: 5 }, { month: 'Sep', count: 3 },
@@ -51,6 +54,11 @@ const DashboardPage: React.FC = () => {
           <Button leftIcon={<Zap size={15}/>}>Create Event</Button>
         </Link>
       </div>
+
+      
+        <RecommendationCards />
+        <CampusTrends />
+        <PushNotificationOptIn />
 
       {/* Hero stat + quick actions */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">

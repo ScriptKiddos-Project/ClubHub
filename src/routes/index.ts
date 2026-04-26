@@ -12,7 +12,8 @@ import notificationRouter from './notification.routes';
 import adminRouter from './admin.routes';
 import { rankingRouter, suggestionRouter } from './phase2Routes';
 import { geoAttendanceRouter, profileRouter } from './phase3Routes';   // ← Phase 3
-
+import phase5Router from './phase5Routes';
+import '../jobs/phase5Jobs'; // Register cron jobs
 const router = Router();
 
 // Health check
@@ -51,5 +52,7 @@ router.use('/api/v1/admin/communities', communityRouter);
 // Phase 2 — Rankings & Suggestions
 router.use('/api/v1', rankingRouter);
 router.use('/api/v1', suggestionRouter);
+
+router.use('/api/v1', phase5Router);
 
 export default router;

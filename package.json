@@ -41,6 +41,7 @@
     "socket.io-client": "^4.8.3",
     "tsconfig-paths": "^4.2.0",
     "uuid": "^9.0.1",
+    "web-push": "^3.6.7",
     "zod": "^3.22.4"
   },
   "devDependencies": {
@@ -58,8 +59,10 @@
     "@types/nodemailer": "^6.4.14",
     "@types/qrcode": "^1.5.5",
     "@types/uuid": "^9.0.8",
+    "@types/web-push": "^3.6.4",
     "@typescript-eslint/eslint-plugin": "^7.2.0",
     "@typescript-eslint/parser": "^7.2.0",
+    "cypress": "^15.14.1",
     "eslint": "^8.57.0",
     "nodemon": "^3.1.0",
     "prettier": "^3.2.5",

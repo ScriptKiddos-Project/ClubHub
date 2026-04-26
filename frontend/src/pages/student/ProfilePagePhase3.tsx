@@ -14,14 +14,15 @@ import BadgesShowcase from '../../components/profile/BadgesShowcase';
 import CertificateList from '../../components/profile/CertificateList';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '../../utils';
+import { LinkedInShareButton } from '../../components/analytics/LinkedInShareButton';
 
 // ── Tab type ──────────────────────────────────────────────────────────────────
 type Tab = 'overview' | 'badges' | 'certificates';
 
 const TABS: { key: Tab; label: string; icon: React.ReactNode }[] = [
-  { key: 'overview',      label: 'Overview',     icon: <TrendingUp size={14} /> },
-  { key: 'badges',        label: 'Badges',        icon: <Shield size={14} /> },
-  { key: 'certificates',  label: 'Certificates',  icon: <Award size={14} /> },
+  { key: 'overview',     label: 'Overview',      icon: <TrendingUp size={14} /> },
+  { key: 'badges',       label: 'Badges',         icon: <Shield size={14} /> },
+  { key: 'certificates', label: 'Certificates',   icon: <Award size={14} /> },
 ];
 
 // ── Stat card ─────────────────────────────────────────────────────────────────
@@ -58,7 +59,9 @@ const AchievementStat: React.FC<{
 );
 
 // ── Recent activity mini list ─────────────────────────────────────────────────
-const RecentCerts: React.FC<{ certs: { eventTitle: string; aictePoints: number; issuedAt: string }[] }> = ({ certs }) => {
+const RecentCerts: React.FC<{
+  certs: { eventTitle: string; aictePoints: number; issuedAt: string }[];
+}> = ({ certs }) => {
   if (certs.length === 0) return null;
   return (
     <Card>
@@ -72,7 +75,9 @@ const RecentCerts: React.FC<{ certs: { eventTitle: string; aictePoints: number; 
             <div className="flex-1 min-w-0">
               <p className="text-xs font-semibold text-gray-800 truncate">{c.eventTitle}</p>
               <p className="text-[11px] text-gray-400">
-                {new Date(c.issuedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                {new Date(c.issuedAt).toLocaleDateString('en-US', {
+                  month: 'short', day: 'numeric', year: 'numeric',
+                })}
               </p>
             </div>
             <Badge variant="primary">+{c.aictePoints} pts</Badge>
@@ -94,7 +99,9 @@ const ProfileSkeleton: React.FC = () => (
       </div>
     </div>
     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-      {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-32 rounded-2xl" />)}
+      {Array.from({ length: 4 }).map((_, i) => (
+        <Skeleton key={i} className="h-32 rounded-2xl" />
+      ))}
     </div>
   </div>
 );
@@ -117,7 +124,8 @@ const ProfilePagePhase3: React.FC = () => {
 
   if (error || !data) {
     return (
-      <div className="max-w-4xl mx-auto px-4 py-6 text-center py-20">
+      // Fixed: removed duplicate py-6 / py-20 conflict → use py-20 only
+      <div className="max-w-4xl mx-auto px-4 py-20 text-center">
         <p className="text-gray-500 text-sm">{error ?? 'Failed to load profile.'}</p>
       </div>
     );
@@ -135,26 +143,37 @@ const ProfilePagePhase3: React.FC = () => {
         />
         <div className="flex-1 min-w-0">
           <h1 className="text-xl font-black text-gray-900">{user?.name ?? 'My Profile'}</h1>
-          <p className="text-sm text-gray-500">{user?.department ?? 'Department'} · {user?.enrollmentYear}</p>
+          <p className="text-sm text-gray-500">
+            {user?.department ?? 'Department'} · {user?.enrollmentYear}
+          </p>
           <div className="flex flex-wrap gap-2 mt-3">
             <Badge variant="primary" dot>{data.earnedBadges.length} Badges</Badge>
             <Badge variant="success" dot>{data.certificates.length} Certificates</Badge>
             <Badge variant="info" dot>{data.totalPoints.toLocaleString()} Points</Badge>
           </div>
         </div>
-        <button
-          onClick={exportResume}
-          disabled={exportLoading}
-          className={cn(
-            'flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 shrink-0',
-            exportLoading
-              ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-              : 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm shadow-indigo-200 active:scale-95'
-          )}
-        >
-          {exportLoading ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} />}
-          {exportLoading ? 'Generating…' : 'Export Resume'}
-        </button>
+
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 shrink-0">
+          {/* Resume export */}
+          <button
+            onClick={exportResume}
+            disabled={exportLoading}
+            className={cn(
+              'flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200',
+              exportLoading
+                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                : 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm shadow-indigo-200 active:scale-95'
+            )}
+          >
+            {exportLoading
+              ? <Loader2 size={14} className="animate-spin" />
+              : <Download size={14} />}
+            {exportLoading ? 'Generating…' : 'Export Resume'}
+          </button>
+
+          {/* LinkedIn share for resume/achievement — always available from hero */}
+          <LinkedInShareButton type="resume" label="Share on LinkedIn" />
+        </div>
       </Card>
 
       {/* Stats row */}
@@ -246,7 +265,7 @@ const ProfilePagePhase3: React.FC = () => {
           {/* Points link card */}
           <button
             onClick={() => navigate('/points')}
-            className="w-full flex items-center justify-between px-5 py-4 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-2xl text-white hover:opacity-95 active:scale-[0.99] transition-all"
+            className="w-full flex items-center justify-between px-5 py-4 bg-linear-to-r from-indigo-500 to-purple-600 rounded-2xl text-white hover:opacity-95 active:scale-[0.99] transition-all"
           >
             <div className="flex items-center gap-3">
               <FileText size={20} />
@@ -267,7 +286,35 @@ const ProfilePagePhase3: React.FC = () => {
       )}
 
       {tab === 'certificates' && (
-        <CertificateList certificates={data.certificates} />
+        <div className="space-y-3">
+          {/* Per-certificate LinkedIn share buttons rendered inside the list */}
+          {data.certificates.map((cert) => (
+            <Card key={cert.id} className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-9 h-9 rounded-lg bg-purple-50 flex items-center justify-center shrink-0">
+                  <Award size={16} className="text-purple-500" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-gray-800 truncate">{cert.eventTitle}</p>
+                  <p className="text-xs text-gray-400">
+                    {new Date(cert.issuedAt).toLocaleDateString('en-US', {
+                      month: 'short', day: 'numeric', year: 'numeric',
+                    })}
+                    {' · '}+{cert.aictePoints} pts
+                  </p>
+                </div>
+              </div>
+              <LinkedInShareButton
+                type="certificate"
+                certificateId={cert.id}
+                label="Share"
+              />
+            </Card>
+          ))}
+
+          {/* CertificateList still renders the full list below */}
+          <CertificateList certificates={data.certificates} />
+        </div>
       )}
     </div>
   );
