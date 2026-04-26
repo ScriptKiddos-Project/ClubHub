@@ -9,16 +9,20 @@ import type {
 
 type UnknownRecord = Record<string, unknown>;
 
+// ─── CATEGORY / TYPE MAPS ────────────────────────────────────────────────────
+
 const clubCategoryMap: Record<string, Club['category']> = {
-  technical: 'technology',
-  cultural: 'arts_culture',
+  // backend snake_case values → frontend (pass-through with Phase 2 values)
+  technical: 'technical',
+  cultural: 'cultural',
   sports: 'sports',
   social: 'social',
   academic: 'academic',
-  entrepreneurship: 'career_prep',
-  arts: 'creative_arts',
-  volunteer: 'development',
-  other: 'development',
+  entrepreneurship: 'entrepreneurship',
+  arts: 'arts',
+  volunteer: 'volunteer',
+  other: 'other',
+  // legacy frontend values (keep working)
   technology: 'technology',
   arts_culture: 'arts_culture',
   career_prep: 'career_prep',
@@ -28,13 +32,19 @@ const clubCategoryMap: Record<string, Club['category']> = {
 
 const clubCategoryApiMap: Record<string, string> = {
   technology: 'technical',
+  technical: 'technical',
   arts_culture: 'cultural',
+  cultural: 'cultural',
   sports: 'sports',
   social: 'social',
   academic: 'academic',
   career_prep: 'entrepreneurship',
+  entrepreneurship: 'entrepreneurship',
   development: 'technical',
   creative_arts: 'arts',
+  arts: 'arts',
+  volunteer: 'volunteer',
+  other: 'other',
 };
 
 const eventTypeMap: Record<string, Event['eventType']> = {
@@ -42,14 +52,16 @@ const eventTypeMap: Record<string, Event['eventType']> = {
   seminar: 'seminar',
   hackathon: 'hackathon',
   cultural: 'social',
-  sports: 'competition',
+  sports: 'social',
   webinar: 'webinar',
   meetup: 'social',
   competition: 'competition',
   volunteer: 'social',
-  other: 'seminar',
+  other: 'social',
   social: 'social',
 };
+
+// ─── PRIMITIVE HELPERS ───────────────────────────────────────────────────────
 
 const asRecord = (value: unknown): UnknownRecord =>
   value && typeof value === 'object' ? (value as UnknownRecord) : {};
@@ -78,8 +90,12 @@ const timeFromIso = (value: unknown): string => {
   return date.toISOString().slice(11, 16);
 };
 
+// ─── PUBLIC API HELPERS ──────────────────────────────────────────────────────
+
 export const mapClubCategoryToApi = (category?: string): string | undefined =>
   category ? clubCategoryApiMap[category] ?? category : undefined;
+
+// ─── NORMALIZERS ─────────────────────────────────────────────────────────────
 
 export const normalizeUser = (value: unknown): User => {
   const raw = asRecord(value);
@@ -93,7 +109,7 @@ export const normalizeUser = (value: unknown): User => {
     enrollmentYear: asNumber(raw.enrollmentYear ?? raw.enrollment_year),
     degreeType: asString(raw.degreeType ?? raw.degree_type, 'bachelors') as User['degreeType'],
     isVerified: asBoolean(raw.isVerified ?? raw.is_verified, true),
-    total_points: asNumber(raw.total_points),
+    total_points: asNumber(raw.total_points ?? raw.totalPoints),
     totalVolunteerHours: asNumber(raw.totalVolunteerHours ?? raw.total_volunteer_hours),
     avatarUrl: asString(raw.avatarUrl ?? raw.avatar_url) || undefined,
     gpa: typeof raw.gpa === 'number' ? raw.gpa : undefined,
@@ -109,16 +125,19 @@ export const normalizeClub = (value: unknown): Club => {
     id: asString(raw.id),
     name: asString(raw.name),
     slug: asString(raw.slug),
-    category: clubCategoryMap[asString(raw.category)] ?? 'development',
+    category: clubCategoryMap[asString(raw.category)] ?? 'other',
     description: asString(raw.description),
     logoUrl: asString(raw.logoUrl ?? raw.logo_url) || undefined,
     bannerUrl: asString(raw.bannerUrl ?? raw.banner_url) || undefined,
     memberCount: asNumber(raw.memberCount ?? raw.member_count),
     status: asString(raw.status, 'approved') as Club['status'],
+    tags: asStringArray(raw.tags),
+    skillAreas: asStringArray(raw.skillAreas ?? raw.skill_areas),
     socialLinks: {
       instagram: asString(raw.instagramUrl ?? raw.instagram_url) || undefined,
       linkedin: asString(raw.linkedinUrl ?? raw.linkedin_url) || undefined,
       website: asString(raw.websiteUrl ?? raw.website_url) || undefined,
+      twitter: asString(raw.twitterUrl ?? raw.twitter_url) || undefined,
     },
     isJoined: asBoolean(raw.isJoined ?? raw.is_member),
     upcomingEventCount: Array.isArray(raw.upcoming_events)
@@ -126,7 +145,16 @@ export const normalizeClub = (value: unknown): Club => {
       : typeof raw.upcomingEventCount === 'number'
       ? raw.upcomingEventCount
       : undefined,
-    rankingScore: typeof raw.rankingScore === 'number' ? raw.rankingScore : undefined,
+    // FIX: reads both camelCase and snake_case for all three ranking fields
+    rankingScore:
+      typeof (raw.rankingScore ?? raw.ranking_score) === 'number'
+        ? (raw.rankingScore ?? raw.ranking_score) as number
+        : undefined,
+    rankingTier: (asString(raw.rankingTier ?? raw.ranking_tier) || undefined) as Club['rankingTier'],
+    rankingRank:
+      typeof (raw.rankingRank ?? raw.ranking_rank) === 'number'
+        ? (raw.rankingRank ?? raw.ranking_rank) as number
+        : undefined,
     createdAt: isoString(raw.createdAt ?? raw.created_at ?? new Date().toISOString()),
   };
 };
@@ -145,31 +173,31 @@ export const normalizeEvent = (value: unknown): Event => {
             id: asString(raw.club_id ?? rawClub.id),
             name: asString(raw.club_name ?? rawClub.name),
             logoUrl: asString(raw.club_logo ?? rawClub.logoUrl ?? rawClub.logo_url) || undefined,
-            category: clubCategoryMap[clubCategory] ?? 'development',
+            category: clubCategoryMap[clubCategory] ?? 'other',
           }
         : undefined,
     title: asString(raw.title),
     description: asString(raw.description),
     heroImageUrl: asString(raw.heroImageUrl ?? raw.banner_url ?? raw.hero_image_url) || undefined,
-    date: isoString(raw.date),
-    startTime: timeFromIso(raw.date),
+    date: isoString(raw.date ?? raw.start_date),
+    startTime: timeFromIso(raw.date ?? raw.start_date),
     endTime: raw.end_date ? timeFromIso(raw.end_date) : timeFromIso(raw.date),
     venue: asString(raw.venue),
     capacity: asNumber(raw.capacity),
     registrationCount: asNumber(raw.registrationCount ?? raw.registration_count),
-    eventType: eventTypeMap[asString(raw.eventType ?? raw.event_type)] ?? 'seminar',
-    status: asBoolean(raw.is_published, true) ? 'published' : 'draft',
+    eventType: eventTypeMap[asString(raw.eventType ?? raw.event_type)] ?? 'other',
+    status: asBoolean(raw.isPublished ?? raw.is_published, true) ? 'published' : 'draft',
     pointsReward: asNumber(raw.pointsReward ?? raw.points_reward),
     volunteerHours: asNumber(raw.volunteerHours ?? raw.volunteer_hours),
-    tags: Array.isArray(raw.tags) ? raw.tags.map((tag) => String(tag)) : [],
+    tags: asStringArray(raw.tags),
     skillAreas: asStringArray(raw.skillAreas ?? raw.skill_areas),
     isFeatured: asBoolean(raw.isFeatured ?? raw.is_featured),
-    engagementScore: typeof raw.engagementScore === 'number'
-      ? raw.engagementScore
-      : typeof raw.engagement_score === 'number'
-      ? raw.engagement_score
-      : undefined,
-    isRegistered: asBoolean(raw.isRegistered ?? raw.is_registered),
+    isRegistered:
+      raw.isRegistered !== undefined
+        ? asBoolean(raw.isRegistered)
+        : raw.user_status !== undefined
+        ? raw.user_status === 'registered'
+        : asBoolean(raw.is_registered),
     attendanceStatus:
       typeof raw.attendanceStatus === 'string'
         ? (raw.attendanceStatus as Event['attendanceStatus'])
@@ -225,7 +253,7 @@ export const normalizeDashboard = (value: unknown): DashboardData => {
       id: event.id,
       title: event.title,
       date: event.date,
-      type: 'event',
+      type: 'event' as const,
     })),
   };
 };
@@ -251,3 +279,7 @@ export const normalizeStudentStats = (value: unknown): StudentStats => {
     eventsHistory: [],
   };
 };
+
+// ─── RE-EXPORTS ──────────────────────────────────────────────────────────────
+
+export { asStringArray, asRecord, asString, asNumber, asBoolean, isoString, timeFromIso };

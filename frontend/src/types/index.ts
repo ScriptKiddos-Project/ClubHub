@@ -1,6 +1,6 @@
 // ─── AUTH & USER ────────────────────────────────────────────────────────────
 
-export type UserRole = 'student' | 'member' | 'secretary' | 'event_manager' | 'super_admin';
+export type UserRole = 'student' | 'member' | 'secretary' | 'event_manager' | 'club_admin' | 'super_admin';
 export type DegreeType = 'bachelors' | 'masters' | 'phd' | 'diploma';
 
 export interface User {
@@ -65,9 +65,15 @@ export type ClubCategory =
   | 'social'
   | 'career_prep'
   | 'development'
-  | 'creative_arts';
+  | 'creative_arts'
+  | 'technical'
+  | 'cultural'
+  | 'entrepreneurship'
+  | 'arts'
+  | 'volunteer'
+  | 'other';
 
-export type ClubStatus = 'pending' | 'approved' | 'rejected';
+export type ClubStatus = 'pending' | 'approved' | 'rejected' | 'suspended';
 
 export interface Club {
   id: string;
@@ -79,14 +85,19 @@ export interface Club {
   bannerUrl?: string;
   memberCount: number;
   status: ClubStatus;
+  tags?: string[];
+  skillAreas?: string[];
   socialLinks?: {
     instagram?: string;
     linkedin?: string;
     website?: string;
+    twitter?: string;
   };
   isJoined?: boolean;
   upcomingEventCount?: number;
   rankingScore?: number;
+  rankingTier?: 'gold' | 'silver' | 'bronze' | 'unranked';
+  rankingRank?: number;
   createdAt: string;
 }
 
@@ -99,7 +110,19 @@ export interface ClubMembership {
 
 // ─── EVENTS ─────────────────────────────────────────────────────────────────
 
-export type EventType = 'workshop' | 'seminar' | 'hackathon' | 'social' | 'competition' | 'webinar';
+export type EventType =
+  | 'workshop'
+  | 'seminar'
+  | 'hackathon'
+  | 'social'
+  | 'competition'
+  | 'webinar'
+  | 'cultural'
+  | 'sports'
+  | 'meetup'
+  | 'volunteer'
+  | 'other';
+
 export type EventStatus = 'draft' | 'published' | 'cancelled' | 'completed';
 
 export interface Event {
@@ -122,7 +145,7 @@ export interface Event {
   tags: string[];
   skillAreas?: string[];
   isFeatured?: boolean;
-  engagementScore?: number;
+  bannerUrl?: string;
   isRegistered?: boolean;
   attendanceStatus?: AttendanceStatus;
   aiMatchScore?: number;
@@ -185,7 +208,13 @@ export interface PINData {
 
 // ─── NOTIFICATIONS ──────────────────────────────────────────────────────────
 
-export type NotificationType = 'event_reminder' | 'attendance_marked' | 'club_update' | 'points_awarded' | 'announcement' | 'system';
+export type NotificationType =
+  | 'event_reminder'
+  | 'attendance_marked'
+  | 'club_update'
+  | 'points_awarded'
+  | 'announcement'
+  | 'system';
 
 export interface Notification {
   id: string;
