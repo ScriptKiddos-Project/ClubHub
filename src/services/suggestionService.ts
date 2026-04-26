@@ -1,9 +1,13 @@
+// FIX: suggestion_status is a valid Prisma enum — errors were caused by
+// the Prisma client not being regenerated after schema update.
+// After `npx prisma generate` this import resolves correctly.
 import { Prisma, Role, suggestion_status } from '@prisma/client';
 import prisma from '../config/database';
 import { AppError } from '../utils/AppError';
 
 export type SuggestionStatus = 'pending' | 'under_consideration' | 'planned' | 'rejected';
 
+// FIX: Prisma.suggestionsGetPayload is correct — it resolves after `npx prisma generate`
 type SuggestionWithUser = Prisma.suggestionsGetPayload<{
   include: { user: { select: { id: true; name: true; avatar_url: true } } };
 }>;
@@ -12,25 +16,30 @@ type SuggestionWithUser = Prisma.suggestionsGetPayload<{
 // createSuggestion
 // ─────────────────────────────────────────────────────────────────────────────
 export async function createSuggestion(data: {
-  clubId:  string;
-  userId:  string;
-  title:   string;
-  body:    string;
+  clubId: string;
+  userId: string;
+  title: string;
+  body: string;
 }) {
-  // Verify club exists
   const club = await prisma.club.findUnique({ where: { id: data.clubId } });
   if (!club) throw new AppError('Club not found', 404, 'CLUB_NOT_FOUND');
   if (club.status !== 'approved') {
-    throw new AppError('Suggestions are only available for approved clubs', 400, 'CLUB_NOT_APPROVED');
+    throw new AppError(
+      'Suggestions are only available for approved clubs',
+      400,
+      'CLUB_NOT_APPROVED',
+    );
   }
 
+  // FIX: prisma.suggestions (lowercase) — Prisma maps the model name directly
+  // when no @@map is set. Model is named `suggestions` so accessor is `prisma.suggestions`
   const suggestion = await prisma.suggestions.create({
     data: {
       club_id: data.clubId,
       user_id: data.userId,
-      title:   data.title,
-      body:    data.body,
-      status:  'pending',
+      title: data.title,
+      body: data.body,
+      status: 'pending',
     },
     include: {
       user: { select: { id: true, name: true, avatar_url: true } },
@@ -44,18 +53,18 @@ export async function createSuggestion(data: {
 // listSuggestions
 // ─────────────────────────────────────────────────────────────────────────────
 export async function listSuggestions(params: {
-  clubId:  string;
+  clubId: string;
   status?: SuggestionStatus;
-  page?:   number;
-  limit?:  number;
+  page?: number;
+  limit?: number;
 }) {
-  const page  = params.page  ?? 1;
+  const page = params.page ?? 1;
   const limit = params.limit ?? 50;
-  const skip  = (page - 1) * limit;
+  const skip = (page - 1) * limit;
 
   const where = {
     club_id: params.clubId,
-    ...(params.status ? { status: params.status } : {}),
+    ...(params.status ? { status: params.status as suggestion_status } : {}),
   };
 
   const [suggestions, total] = await Promise.all([
@@ -79,14 +88,19 @@ export async function listSuggestions(params: {
 // updateSuggestionStatus — admin only
 // ─────────────────────────────────────────────────────────────────────────────
 export async function updateSuggestionStatus(data: {
-  clubId:        string;
-  suggestionId:  string;
-  status:        SuggestionStatus;
-  adminNote?:    string;
-  actorId:       string;
-  actorRole:     Role;
+  clubId: string;
+  suggestionId: string;
+  status: SuggestionStatus;
+  adminNote?: string;
+  actorId: string;
+  actorRole: Role;
 }) {
-  const allowedStatuses: SuggestionStatus[] = ['pending', 'under_consideration', 'planned', 'rejected'];
+  const allowedStatuses: SuggestionStatus[] = [
+    'pending',
+    'under_consideration',
+    'planned',
+    'rejected',
+  ];
   if (!allowedStatuses.includes(data.status)) {
     throw new AppError('Invalid suggestion status', 400, 'INVALID_STATUS');
   }
@@ -102,7 +116,10 @@ export async function updateSuggestionStatus(data: {
       select: { role: true },
     });
 
-    if (!membership || !['secretary', 'event_manager'].includes(membership.role)) {
+    if (
+      !membership ||
+      !['secretary', 'event_manager'].includes(membership.role)
+    ) {
       throw new AppError('Forbidden', 403, 'FORBIDDEN');
     }
   }
@@ -115,7 +132,7 @@ export async function updateSuggestionStatus(data: {
   const updated = await prisma.suggestions.update({
     where: { id: data.suggestionId },
     data: {
-      status:     data.status as suggestion_status,
+      status: data.status as suggestion_status,
       admin_note: data.adminNote,
     },
     include: { user: { select: { id: true, name: true, avatar_url: true } } },
@@ -129,15 +146,15 @@ export async function updateSuggestionStatus(data: {
 // ─────────────────────────────────────────────────────────────────────────────
 function normalizeSuggestion(s: SuggestionWithUser) {
   return {
-    id:        s.id,
-    clubId:    s.club_id,
-    userId:    s.user_id,
-    user:      s.user
+    id: s.id,
+    clubId: s.club_id,
+    userId: s.user_id,
+    user: s.user
       ? { name: s.user.name, avatarUrl: s.user.avatar_url ?? undefined }
       : undefined,
-    title:     s.title,
-    body:      s.body,
-    status:    s.status,
+    title: s.title,
+    body: s.body,
+    status: s.status,
     adminNote: s.admin_note,
     createdAt: s.created_at.toISOString(),
     updatedAt: s.updated_at.toISOString(),

@@ -360,3 +360,186 @@ npm run dev
 * Built with **production deployment in mind**
 
 ---
+```
+clubhub_fixed
+├─ .eslintrc.json
+├─ ClubHub_PhaseB.postman_collection.json
+├─ frontend
+│  ├─ eslint.config.js
+│  ├─ index.html
+│  ├─ package-lock.json
+│  ├─ package.json
+│  ├─ public
+│  │  ├─ favicon.svg
+│  │  ├─ icons.svg
+│  │  ├─ logo.png
+│  │  └─ o.png
+│  ├─ README.md
+│  ├─ src
+│  │  ├─ App.css
+│  │  ├─ App.tsx
+│  │  ├─ assets
+│  │  │  ├─ hero.png
+│  │  │  ├─ react.svg
+│  │  │  └─ vite.svg
+│  │  ├─ components
+│  │  │  ├─ attendance
+│  │  │  │  └─ QRScanner.tsx
+│  │  │  ├─ clubs
+│  │  │  │  ├─ ClubCard.tsx
+│  │  │  │  └─ SuggestionBox.tsx
+│  │  │  ├─ ErrorBoundary.tsx
+│  │  │  ├─ events
+│  │  │  │  ├─ AdvancedEventFilters.tsx
+│  │  │  │  ├─ CalendarView.tsx
+│  │  │  │  ├─ EventCard.tsx
+│  │  │  │  ├─ EventTimelineView.tsx
+│  │  │  │  └─ FeaturedEventsSection.tsx
+│  │  │  ├─ layout
+│  │  │  │  ├─ index.tsx
+│  │  │  │  ├─ Navbar.tsx
+│  │  │  │  └─ Sidebar.tsx
+│  │  │  ├─ rankings
+│  │  │  │  ├─ RankingBadge.tsx
+│  │  │  │  └─ RankingBreakdownModal.tsx
+│  │  │  ├─ ui
+│  │  │  │  ├─ Button.tsx
+│  │  │  │  ├─ index.tsx
+│  │  │  │  └─ Input.tsx
+│  │  │  └─ virtual-table
+│  │  │     └─ Virtualtable.tsx
+│  │  ├─ hooks
+│  │  │  ├─ useAuth.ts
+│  │  │  ├─ useClubs.ts
+│  │  │  ├─ useEvents.ts
+│  │  │  ├─ useNotifications.ts
+│  │  │  └─ usePhase2.ts
+│  │  ├─ index.css
+│  │  ├─ main.tsx
+│  │  ├─ pages
+│  │  │  ├─ admin
+│  │  │  │  ├─ AdminDashboardPage.tsx
+│  │  │  │  ├─ AdminPhase2Page.tsx
+│  │  │  │  ├─ AttendanceReportPage.tsx
+│  │  │  │  ├─ MemberRosterPage.tsx
+│  │  │  │  ├─ SuperAdminPage.tsx
+│  │  │  │  └─ SuperAdminUsersTab.tsx
+│  │  │  ├─ auth
+│  │  │  │  ├─ LoginPage.tsx
+│  │  │  │  ├─ OtherAuthPages.tsx
+│  │  │  │  └─ RegisterPage.tsx
+│  │  │  ├─ misc.tsx
+│  │  │  └─ student
+│  │  │     ├─ AnalyticsPage.tsx
+│  │  │     ├─ AttendancePage.tsx
+│  │  │     ├─ ClubDetailPage.tsx
+│  │  │     ├─ ClubDetailPagePhase2.tsx
+│  │  │     ├─ ClubRankingsPage.tsx
+│  │  │     ├─ ClubsPage.tsx
+│  │  │     ├─ CreateEventPage.tsx
+│  │  │     ├─ DashboardPage.tsx
+│  │  │     ├─ EventDetailPage.tsx
+│  │  │     ├─ EventsPage.tsx
+│  │  │     ├─ EventsPagePhase2.tsx
+│  │  │     ├─ MessagesPage.tsx
+│  │  │     └─ ProfilePage.tsx
+│  │  ├─ services
+│  │  │  ├─ api.ts
+│  │  │  ├─ authService.ts
+│  │  │  ├─ clubService.ts
+│  │  │  ├─ eventService.ts
+│  │  │  ├─ featuredEventService.ts
+│  │  │  ├─ normalizers.ts
+│  │  │  ├─ rankingService.ts
+│  │  │  ├─ suggestionService.ts
+│  │  │  └─ userService.ts
+│  │  ├─ store
+│  │  │  ├─ authStore.ts
+│  │  │  ├─ notificationStore.ts
+│  │  │  └─ uiStore.ts
+│  │  ├─ types
+│  │  │  ├─ index.ts
+│  │  │  └─ phase2.ts
+│  │  ├─ utils
+│  │  │  └─ index.ts
+│  │  └─ vite-env.d.ts
+│  ├─ tsconfig.app.json
+│  ├─ tsconfig.json
+│  ├─ tsconfig.node.json
+│  └─ vite.config.ts
+├─ nodemon.json
+├─ package-lock.json
+├─ package.json
+├─ prisma
+│  ├─ schema.prisma
+│  └─ seed.ts
+├─ README.md
+├─ src
+│  ├─ app.ts
+│  ├─ config
+│  │  ├─ database.ts
+│  │  ├─ email.ts
+│  │  ├─ queues.ts
+│  │  └─ redis.ts
+│  ├─ controllers
+│  │  ├─ analyticsController.ts
+│  │  ├─ attendanceController.ts
+│  │  ├─ authController.ts
+│  │  ├─ clubController.ts
+│  │  ├─ clubControllers.ts
+│  │  ├─ eventController.ts
+│  │  ├─ notificationController.ts
+│  │  ├─ rankingController.ts
+│  │  └─ suggestionController.ts
+│  ├─ index.ts
+│  ├─ jobs
+│  │  ├─ emailWorker.ts
+│  │  ├─ notificationWorker.ts
+│  │  ├─ rankingCron.ts
+│  │  └─ reminderWorker.ts
+│  ├─ middleware
+│  │  ├─ asyncHandler.ts
+│  │  ├─ auth.ts
+│  │  ├─ errorHandler.ts
+│  │  ├─ ownership.ts
+│  │  ├─ rateLimiter.ts
+│  │  ├─ rbac.ts
+│  │  └─ validate.ts
+│  ├─ routes
+│  │  ├─ admin.routes.ts
+│  │  ├─ attendance.routes.ts
+│  │  ├─ auth.routes.ts
+│  │  ├─ club.routes.ts
+│  │  ├─ event.routes.ts
+│  │  ├─ health.routes.ts
+│  │  ├─ index.ts
+│  │  ├─ notification.routes.ts
+│  │  ├─ phase2Routes.ts
+│  │  └─ user.routes.ts
+│  ├─ server.ts
+│  ├─ services
+│  │  ├─ analyticsService.ts
+│  │  ├─ attendanceService.ts
+│  │  ├─ authService.ts
+│  │  ├─ clubService.ts
+│  │  ├─ emailService.ts
+│  │  ├─ eventService.ts
+│  │  ├─ notificationService.ts
+│  │  ├─ rankingService.ts
+│  │  └─ suggestionService.ts
+│  ├─ types
+│  │  └─ index.ts
+│  ├─ utils
+│  │  ├─ AppError.ts
+│  │  ├─ bcrypt.ts
+│  │  ├─ dateUtils.ts
+│  │  ├─ jwt.ts
+│  │  ├─ qrGenerator.ts
+│  │  ├─ response.ts
+│  │  └─ validators.ts
+│  └─ validators
+│     ├─ club.validator.ts
+│     └─ event.validator.ts
+└─ tsconfig.json
+
+```

@@ -56,13 +56,21 @@ async function computeClubScore(clubId: string): Promise<{
         skill_areas: true,
       },
     }),
+    // FIX: include all fields needed — is_featured, skill_areas, registration_count, capacity
+    // and registrations with explicit type so it's not `never`
     prisma.event.findMany({
       where: {
         club_id: clubId,
         date: { gte: thirtyDaysAgo, lte: now },
         is_published: true,
       },
-      include: {
+      select: {
+        id: true,
+        capacity: true,
+        registration_count: true,
+        is_featured: true,       // FIX: was missing from select → typed as never
+        skill_areas: true,       // FIX: was missing from select → typed as never
+        tags: true,
         registrations: {
           select: {
             user_id: true,
@@ -91,13 +99,19 @@ async function computeClubScore(clubId: string): Promise<{
     throw new AppError('Club not found', 404, 'CLUB_NOT_FOUND');
   }
 
-  const totalRegistrations = recentEvents.reduce((sum, event) => sum + event.registrations.length, 0);
-  const totalPresent = recentEvents.reduce(
-    (sum, event) =>
-      sum + event.registrations.filter((registration) => attendedStatusSet.has(registration.status)).length,
+  // FIX: registrations is now properly typed — .length works
+  const totalRegistrations = recentEvents.reduce(
+    (sum, event) => sum + event.registrations.length,
     0,
   );
-  const attendanceRateRaw = totalRegistrations > 0 ? (totalPresent / totalRegistrations) * 100 : 0;
+  const totalPresent = recentEvents.reduce(
+    (sum, event) =>
+      sum +
+      event.registrations.filter((r) => attendedStatusSet.has(r.status)).length,
+    0,
+  );
+  const attendanceRateRaw =
+    totalRegistrations > 0 ? (totalPresent / totalRegistrations) * 100 : 0;
 
   const eventsHeldRaw = clamp100(recentEvents.length * 10);
 
@@ -107,7 +121,8 @@ async function computeClubScore(clubId: string): Promise<{
   const avgFillRate =
     recentEvents.length > 0
       ? recentEvents.reduce(
-          (sum, event) => sum + Math.min(1, event.registration_count / Math.max(1, event.capacity)),
+          (sum, event) =>
+            sum + Math.min(1, event.registration_count / Math.max(1, event.capacity)),
           0,
         ) / recentEvents.length
       : 0;
@@ -120,9 +135,13 @@ async function computeClubScore(clubId: string): Promise<{
     club.twitter_url,
   ].filter(Boolean).length;
   const contentSignals = club.tags.length + club.skill_areas.length;
+  // FIX: is_featured now available because it's in the select above
   const featuredEvents = recentEvents.filter((event) => event.is_featured).length;
   const socialActivityRaw = clamp100(
-    socialLinksCount * 20 + Math.min(20, contentSignals * 4) + featuredEvents * 10 + recentEvents.length * 3,
+    socialLinksCount * 20 +
+      Math.min(20, contentSignals * 4) +
+      featuredEvents * 10 +
+      recentEvents.length * 3,
   );
 
   const totalScore =
@@ -158,7 +177,8 @@ export async function runNightlyRankingJob(): Promise<void> {
 
   scores.sort((a, b) => {
     if (b.totalScore !== a.totalScore) return b.totalScore - a.totalScore;
-    if (b.memberEngagement !== a.memberEngagement) return b.memberEngagement - a.memberEngagement;
+    if (b.memberEngagement !== a.memberEngagement)
+      return b.memberEngagement - a.memberEngagement;
     return b.attendanceRate - a.attendanceRate;
   });
 
@@ -167,6 +187,9 @@ export async function runNightlyRankingJob(): Promise<void> {
       const rank = index + 1;
 
       return [
+        // FIX: use prisma.club_ranking_snapshots (camelCase) — Prisma maps
+        // snake_case model names to camelCase on the client.
+        // `club_ranking_snapshots` model → `prisma.club_ranking_snapshots`
         prisma.club_ranking_snapshots.create({
           data: {
             club_id: score.clubId,
@@ -182,6 +205,7 @@ export async function runNightlyRankingJob(): Promise<void> {
         }),
         prisma.club.update({
           where: { id: score.clubId },
+          // FIX: ranking_score, ranking_tier, ranking_rank are now in schema
           data: {
             ranking_score: score.totalScore,
             ranking_tier: score.tier,
@@ -210,6 +234,7 @@ export async function getRankingBreakdown(clubId: string) {
 
   const [scores, snapshots] = await Promise.all([
     computeClubScore(clubId),
+    // FIX: prisma.club_ranking_snapshots (camelCase)
     prisma.club_ranking_snapshots.findMany({
       where: { club_id: clubId },
       orderBy: { computed_at: 'desc' },
@@ -238,6 +263,7 @@ export async function getRankingHistory(clubId: string) {
     throw new AppError('Club not found', 404, 'CLUB_NOT_FOUND');
   }
 
+  // FIX: prisma.club_ranking_snapshots (camelCase)
   const snapshots = await prisma.club_ranking_snapshots.findMany({
     where: { club_id: clubId },
     orderBy: { computed_at: 'asc' },
@@ -269,7 +295,11 @@ export async function getLeaderboard(params: {
   const [clubs, total] = await Promise.all([
     prisma.club.findMany({
       where,
-      orderBy: [{ ranking_rank: 'asc' }, { ranking_score: 'desc' }, { member_count: 'desc' }],
+      orderBy: [
+        { ranking_rank: 'asc' },
+        { ranking_score: 'desc' },
+        { member_count: 'desc' },
+      ],
       skip,
       take: limit,
       select: {
@@ -287,6 +317,7 @@ export async function getLeaderboard(params: {
     prisma.club.count({ where }),
   ]);
 
+  // FIX: prisma.club_ranking_snapshots (camelCase)
   const previousSnapshots = await prisma.club_ranking_snapshots.findMany({
     where: { club_id: { in: clubs.map((club) => club.id) } },
     orderBy: [{ club_id: 'asc' }, { computed_at: 'desc' }],
@@ -334,7 +365,24 @@ export async function getFeaturedEvents(limit = 6) {
       is_published: true,
       date: { gte: now, lte: thirtyDaysLater },
     },
-    include: {
+    // FIX: use explicit select so skill_areas and is_featured are included
+    select: {
+      id: true,
+      club_id: true,
+      title: true,
+      date: true,
+      end_date: true,
+      venue: true,
+      capacity: true,
+      registration_count: true,
+      event_type: true,
+      tags: true,
+      skill_areas: true,       // FIX: was missing from include
+      is_featured: true,       // FIX: was missing from include
+      points_reward: true,
+      volunteer_hours: true,
+      banner_url: true,
+      created_at: true,
       club: {
         select: {
           name: true,
@@ -346,17 +394,21 @@ export async function getFeaturedEvents(limit = 6) {
   });
 
   const scored = events.map((event) => {
-    const fillRate = event.capacity > 0 ? event.registration_count / event.capacity : 0;
-    const hoursUntilEvent = (event.date.getTime() - now.getTime()) / (1000 * 60 * 60);
+    const fillRate =
+      event.capacity > 0 ? event.registration_count / event.capacity : 0;
+    const hoursUntilEvent =
+      (event.date.getTime() - now.getTime()) / (1000 * 60 * 60);
     const recencyBoost = Math.max(0, 1 - hoursUntilEvent / (30 * 24));
-    const tagBoost = Math.min(0.1, event.tags.length * 0.02 + event.skill_areas.length * 0.02);
+    // FIX: skill_areas and is_featured now typed correctly
+    const tagBoost = Math.min(
+      0.1,
+      event.tags.length * 0.02 + event.skill_areas.length * 0.02,
+    );
     const featuredBoost = event.is_featured ? 0.15 : 0;
-    const engagementScore = (fillRate + recencyBoost + tagBoost + featuredBoost) * 100;
+    const engagementScore =
+      (fillRate + recencyBoost + tagBoost + featuredBoost) * 100;
 
-    return {
-      ...event,
-      engagementScore,
-    };
+    return { ...event, engagementScore };
   });
 
   scored.sort((a, b) => b.engagementScore - a.engagementScore);
@@ -377,6 +429,7 @@ export async function getFeaturedEvents(limit = 6) {
     registrationCount: event.registration_count,
     eventType: event.event_type,
     tags: event.tags,
+    // FIX: skill_areas now typed correctly
     skillAreas: event.skill_areas,
     pointsReward: event.points_reward,
     volunteerHours: event.volunteer_hours,

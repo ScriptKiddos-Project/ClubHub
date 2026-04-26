@@ -93,8 +93,12 @@ export async function loginUser(email: string, password: string) {
   if (!isMatch) throw new AppError('Invalid email or password', 401, 'INVALID_CREDENTIALS');
 
   // In development, skip email verification check so you can test without real emails
-  if (process.env.NODE_ENV !== 'development' && !user.is_verified) {
-    throw new AppError('Please verify your email first', 403, 'EMAIL_NOT_VERIFIED');
+  // if (process.env.NODE_ENV !== 'development' && !user.is_verified) {
+  //   throw new AppError('Please verify your email first', 403, 'EMAIL_NOT_VERIFIED');
+  // }
+
+  if (!user.is_verified) {
+    throw new AppError('Please verify your email first. Check your inbox for the verification link.', 403, 'EMAIL_NOT_VERIFIED');
   }
 
   if (!user.is_active) throw new AppError('Account is suspended', 403, 'ACCOUNT_SUSPENDED');

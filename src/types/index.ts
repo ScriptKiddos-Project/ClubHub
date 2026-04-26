@@ -36,18 +36,20 @@ export interface JwtPayload {
 }
 
 export interface AuthenticatedUser {
-  id:    string;
-  email: string;
-  role:  Role;
-  name:  string;
+  id:       string;
+  email:    string;
+  role:     Role;
+  name:     string;
   clubIds?: string[];
 }
 
-declare global {
-  namespace Express {
-    interface Request {
-      user?: AuthenticatedUser;
-    }
+// FIX: Replace `declare global { namespace Express { ... } }` with a .d.ts-style
+// module augmentation. The ESLint rule @typescript-eslint/no-namespace bans
+// `namespace` inside modules; augmenting Express via an interface re-declaration
+// is the correct pattern for Express + TypeScript projects.
+declare module 'express-serve-static-core' {
+  interface Request {
+    user?: AuthenticatedUser;
   }
 }
 
@@ -115,16 +117,16 @@ export interface ClubDetail extends ClubListItem {
 }
 
 export interface CreateClubInput {
-  name:          string;
-  slug:          string;
-  description?:  string;
-  category:      ClubCategory;
-  logo_url?:     string;
-  banner_url?:   string;
-  website_url?:  string;
+  name:           string;
+  slug:           string;
+  description?:   string;
+  category:       ClubCategory;
+  logo_url?:      string;
+  banner_url?:    string;
+  website_url?:   string;
   instagram_url?: string;
-  linkedin_url?: string;
-  twitter_url?:  string;
+  linkedin_url?:  string;
+  twitter_url?:   string;
 }
 
 export interface ApproveClubInput {
@@ -168,50 +170,50 @@ export interface EventListItem {
 }
 
 export interface EventDetail extends EventListItem {
-  description:             string;
-  qr_attendance_enabled:   boolean;
-  pin_attendance_enabled:  boolean;
-  created_by:              string;
-  created_at:              Date;
-  updated_at:              Date;
+  description:            string;
+  qr_attendance_enabled:  boolean;
+  pin_attendance_enabled: boolean;
+  created_by:             string;
+  created_at:             Date;
+  updated_at:             Date;
 }
 
 export interface CreateEventInput {
-  club_id:               string;
-  title:                 string;
-  description:           string;
-  date:                  Date | string;
-  end_date?:             Date | string;
-  venue:                 string;
-  capacity:              number;
+  club_id:                string;
+  title:                  string;
+  description:            string;
+  date:                   Date | string;
+  end_date?:              Date | string;
+  venue:                  string;
+  capacity:               number;
   registration_deadline?: Date | string;
-  event_type:            EventType;
-  is_published?:         boolean;
-  points_reward?:        number;
-  volunteer_hours?:      number;
-  tags?:                 string[];
-  is_free?:              boolean;
+  event_type:             EventType;
+  is_published?:          boolean;
+  points_reward?:         number;
+  volunteer_hours?:       number;
+  tags?:                  string[];
+  is_free?:               boolean;
   qr_attendance_enabled?: boolean;
   pin_attendance_enabled?: boolean;
-  banner_url?:           string;
+  banner_url?:            string;
 }
 
 export interface UpdateEventInput extends Partial<CreateEventInput> {}
 
 export interface EventFilters {
-  club_id?:     string;
-  type?:        EventType;
-  date_from?:   string;
-  date_to?:     string;
-  is_published?: boolean;
-  is_free?:     boolean;
-  tags?:        string[];
-  skill_areas?: string[];
+  club_id?:             string;
+  type?:                EventType;
+  date_from?:           string;
+  date_to?:             string;
+  is_published?:        boolean;
+  is_free?:             boolean;
+  tags?:                string[];
+  skill_areas?:         string[];
   volunteer_hours_min?: number;
-  is_featured?: boolean;
-  search?:      string;
-  cursor?:      string;
-  limit?:       number;
+  is_featured?:         boolean;
+  search?:              string;
+  cursor?:              string;
+  limit?:               number;
 }
 
 // ── Event Registration ────────────────────────────────────────────────────────

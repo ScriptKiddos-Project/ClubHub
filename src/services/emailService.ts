@@ -1,9 +1,5 @@
-// src/services/emailService.ts
-import { Resend } from 'resend';
+import { sendEmail } from '../config/email';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
-
-const FROM = `${process.env.EMAIL_FROM_NAME || 'ClubHub'} <${process.env.EMAIL_FROM || 'onboarding@resend.dev'}>`;
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
 
 function formatDate(date: Date): string {
@@ -14,35 +10,16 @@ function formatDate(date: Date): string {
   });
 }
 
-async function send(to: string, subject: string, html: string): Promise<void> {
-  const { data, error } = await resend.emails.send({
-    from: FROM,
-    to,
-    subject,
-    html,
-  });
-
-  if (error) {
-    console.error('❌ Resend error:', error);
-    throw new Error(error.message);
-  }
-
-  console.log('✅ Email sent:', data?.id);
-}
-
-// ── Verification Email ────────────────────────────────────────────────────────
 export async function sendVerificationEmail(options: {
   to: string;
   userName: string;
   token: string;
 }): Promise<void> {
   const verifyUrl = `${FRONTEND_URL}/verify-email?token=${options.token}`;
-  await send(
-    options.to,
-    'Verify your ClubHub email address',
-    `<!DOCTYPE html>
-    <html>
-    <body style="font-family:Arial,sans-serif;background:#f4f4f4;padding:20px;">
+  await sendEmail({
+    to: options.to,
+    subject: 'Verify your ClubHub email address',
+    html: `<!DOCTYPE html><html><body style="font-family:Arial,sans-serif;background:#f4f4f4;padding:20px;">
       <div style="max-width:600px;margin:0 auto;background:white;border-radius:8px;padding:32px;">
         <h1 style="color:#6366f1;">ClubHub</h1>
         <h2>Verify Your Email ✉️</h2>
@@ -53,24 +30,20 @@ export async function sendVerificationEmail(options: {
         </a>
         <p style="color:#9ca3af;font-size:13px;">This link expires in 60 minutes.</p>
       </div>
-    </body>
-    </html>`
-  );
+    </body></html>`,
+  });
 }
 
-// ── Password Reset ────────────────────────────────────────────────────────────
 export async function sendPasswordResetEmail(options: {
   to: string;
   userName: string;
   token: string;
 }): Promise<void> {
   const resetUrl = `${FRONTEND_URL}/auth/reset-password?token=${options.token}`;
-  await send(
-    options.to,
-    'Reset your ClubHub password',
-    `<!DOCTYPE html>
-    <html>
-    <body style="font-family:Arial,sans-serif;background:#f4f4f4;padding:20px;">
+  await sendEmail({
+    to: options.to,
+    subject: 'Reset your ClubHub password',
+    html: `<!DOCTYPE html><html><body style="font-family:Arial,sans-serif;background:#f4f4f4;padding:20px;">
       <div style="max-width:600px;margin:0 auto;background:white;border-radius:8px;padding:32px;">
         <h1 style="color:#6366f1;">ClubHub</h1>
         <h2>Reset Your Password 🔐</h2>
@@ -80,12 +53,10 @@ export async function sendPasswordResetEmail(options: {
           Reset Password →
         </a>
       </div>
-    </body>
-    </html>`
-  );
+    </body></html>`,
+  });
 }
 
-// ── Core Member Welcome ───────────────────────────────────────────────────────
 export async function sendWelcomeCoreEmail(options: {
   to: string;
   userName: string;
@@ -94,12 +65,10 @@ export async function sendWelcomeCoreEmail(options: {
   tenureStart: string;
   tenureEnd: string;
 }): Promise<void> {
-  await send(
-    options.to,
-    `Welcome to ${options.clubName} Core Team!`,
-    `<!DOCTYPE html>
-    <html>
-    <body style="font-family:Arial,sans-serif;background:#f4f4f4;padding:20px;">
+  await sendEmail({
+    to: options.to,
+    subject: `Welcome to ${options.clubName} Core Team!`,
+    html: `<!DOCTYPE html><html><body style="font-family:Arial,sans-serif;background:#f4f4f4;padding:20px;">
       <div style="max-width:600px;margin:0 auto;background:white;border-radius:8px;padding:32px;">
         <h1 style="color:#6366f1;">ClubHub</h1>
         <h2>Welcome to the Core Team! 🚀</h2>
@@ -110,12 +79,10 @@ export async function sendWelcomeCoreEmail(options: {
           Go to Dashboard →
         </a>
       </div>
-    </body>
-    </html>`
-  );
+    </body></html>`,
+  });
 }
 
-// ── Event Registration Confirmation ──────────────────────────────────────────
 export async function sendEventRegistrationEmail(options: {
   to: string;
   userName: string;
@@ -125,12 +92,10 @@ export async function sendEventRegistrationEmail(options: {
   clubName: string;
   eventId: string;
 }): Promise<void> {
-  await send(
-    options.to,
-    `✅ Registered: ${options.eventTitle}`,
-    `<!DOCTYPE html>
-    <html>
-    <body style="font-family:Arial,sans-serif;background:#f4f4f4;padding:20px;">
+  await sendEmail({
+    to: options.to,
+    subject: `✅ Registered: ${options.eventTitle}`,
+    html: `<!DOCTYPE html><html><body style="font-family:Arial,sans-serif;background:#f4f4f4;padding:20px;">
       <div style="max-width:600px;margin:0 auto;background:white;border-radius:8px;padding:32px;">
         <h1 style="color:#6366f1;">ClubHub</h1>
         <h2>You're registered! 🎉</h2>
@@ -141,12 +106,10 @@ export async function sendEventRegistrationEmail(options: {
           View Event →
         </a>
       </div>
-    </body>
-    </html>`
-  );
+    </body></html>`,
+  });
 }
 
-// ── 24-Hour Reminder ──────────────────────────────────────────────────────────
 export async function sendEventReminderEmail(options: {
   to: string;
   userName: string;
@@ -156,12 +119,10 @@ export async function sendEventReminderEmail(options: {
   clubName: string;
   eventId: string;
 }): Promise<void> {
-  await send(
-    options.to,
-    `⏰ Reminder: ${options.eventTitle} — Tomorrow`,
-    `<!DOCTYPE html>
-    <html>
-    <body style="font-family:Arial,sans-serif;background:#f4f4f4;padding:20px;">
+  await sendEmail({
+    to: options.to,
+    subject: `⏰ Reminder: ${options.eventTitle} — Tomorrow`,
+    html: `<!DOCTYPE html><html><body style="font-family:Arial,sans-serif;background:#f4f4f4;padding:20px;">
       <div style="max-width:600px;margin:0 auto;background:white;border-radius:8px;padding:32px;">
         <h1 style="color:#6366f1;">ClubHub</h1>
         <h2>Event tomorrow! ⏰</h2>
@@ -172,24 +133,20 @@ export async function sendEventReminderEmail(options: {
           View Event →
         </a>
       </div>
-    </body>
-    </html>`
-  );
+    </body></html>`,
+  });
 }
 
-// ── Event Cancellation ────────────────────────────────────────────────────────
 export async function sendEventCancellationEmail(options: {
   to: string;
   userName: string;
   eventTitle: string;
   reason?: string;
 }): Promise<void> {
-  await send(
-    options.to,
-    `❌ Event Cancelled: ${options.eventTitle}`,
-    `<!DOCTYPE html>
-    <html>
-    <body style="font-family:Arial,sans-serif;background:#f4f4f4;padding:20px;">
+  await sendEmail({
+    to: options.to,
+    subject: `❌ Event Cancelled: ${options.eventTitle}`,
+    html: `<!DOCTYPE html><html><body style="font-family:Arial,sans-serif;background:#f4f4f4;padding:20px;">
       <div style="max-width:600px;margin:0 auto;background:white;border-radius:8px;padding:32px;">
         <h1 style="color:#6366f1;">ClubHub</h1>
         <h2>Event Cancelled</h2>
@@ -200,7 +157,6 @@ export async function sendEventCancellationEmail(options: {
           Browse Events →
         </a>
       </div>
-    </body>
-    </html>`
-  );
+    </body></html>`,
+  });
 }

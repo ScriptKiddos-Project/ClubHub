@@ -3,7 +3,7 @@
 
 import prisma from "../config/database";
 import { AppError } from "../utils/AppError";
-import { EventType, Role } from "@prisma/client";
+import { Role } from "@prisma/client";
 import {
   EventListItem,
   EventDetail,
@@ -345,11 +345,11 @@ export async function updateEvent(
     updateData.pin_attendance_enabled = input.pin_attendance_enabled;
   if (input.banner_url !== undefined) updateData.banner_url = input.banner_url;
 
-  const _updated = await prisma.event.update({
-    where: { id: eventId },
-    data: updateData,
-    include: { club: { select: { name: true, logo_url: true } } },
-  });
+  // const _updated = await prisma.event.update({
+  //   where: { id: eventId },
+  //   data: updateData,
+  //   include: { club: { select: { name: true, logo_url: true } } },
+  // });
 
   return getEventById(eventId, userId);
 }

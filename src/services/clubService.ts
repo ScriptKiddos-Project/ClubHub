@@ -4,10 +4,8 @@
 import prisma from "../config/database";
 import { AppError } from "../utils/AppError";
 import {
-  ClubCategory,
   ClubMemberRole,
   ClubStatus,
-  Role,
 } from "@prisma/client";
 import {
   ClubListItem,

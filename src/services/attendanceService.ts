@@ -1,6 +1,6 @@
 import { PrismaClient, AttendanceStatus, AttendanceMethod, NotificationType } from '@prisma/client';
 import getRedis from '../config/redis';
-import { notificationQueue, emailQueue, EmailJobType, NotificationJobType } from '../config/queues';
+import { notificationQueue, NotificationJobType } from '../config/queues';
 import {
   buildQRPayload,
   encodeQRData,
