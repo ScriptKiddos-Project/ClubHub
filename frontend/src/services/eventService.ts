@@ -9,12 +9,18 @@ export const eventService = {
   list: async (params?: {
     page?: number; limit?: number; clubId?: string;
     type?: string; date?: string; search?: string;
+    tags?: string[]; skillAreas?: string[]; volunteerHoursMin?: number; isFeatured?: boolean;
   }) => {
     const response = await api.get('/events', {
       params: {
         limit: params?.limit,
         club_id: params?.clubId,
         type: params?.type ? toApiEventType(params.type) : undefined,
+        search: params?.search,
+        tags: params?.tags?.join(','),
+        skill_areas: params?.skillAreas?.join(','),
+        volunteer_hours_min: params?.volunteerHoursMin,
+        is_featured: params?.isFeatured,
       },
     });
     const items = Array.isArray(response.data.data) ? response.data.data.map(normalizeEvent) : [];

@@ -158,6 +158,9 @@ export interface EventListItem {
   points_reward:         number;
   volunteer_hours:       number;
   tags:                  string[];
+  skill_areas?:          string[];
+  is_featured?:          boolean;
+  engagement_score?:     number;
   banner_url:            string | null;
   registration_deadline: Date | null;
   is_registered?:        boolean;
@@ -203,6 +206,10 @@ export interface EventFilters {
   is_published?: boolean;
   is_free?:     boolean;
   tags?:        string[];
+  skill_areas?: string[];
+  volunteer_hours_min?: number;
+  is_featured?: boolean;
+  search?:      string;
   cursor?:      string;
   limit?:       number;
 }

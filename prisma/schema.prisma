@@ -1,5 +1,5 @@
 // server/prisma/schema.prisma
-// ClubHub — Phase 1 Merged Schema
+// ClubHub — Phase 1 + Phase 2 Merged Schema
 
 generator client {
   provider = "prisma-client-js"
@@ -95,6 +95,14 @@ enum NotificationType {
   system
 }
 
+// ── Phase 2 ───────────────────────────────────────────────────────────────────
+enum suggestion_status {
+  pending
+  under_consideration
+  planned
+  rejected
+}
+
 // ─── Users ────────────────────────────────────────────────────────────────────
 
 model User {
@@ -134,6 +142,7 @@ model User {
   created_clubs         Club[]              @relation("ClubCreator")
   points_history        PointsHistory[]
   access_code_uses      AccessCodeUsage[]
+  suggestions           suggestions[]       // Phase 2
 
   @@index([email])
   @@index([role])
@@ -143,9 +152,9 @@ model User {
 // ─── Clubs ────────────────────────────────────────────────────────────────────
 
 model Club {
-  id               String      @id @default(uuid())
-  name             String      @unique
-  slug             String      @unique
+  id               String       @id @default(uuid())
+  name             String       @unique
+  slug             String       @unique
   description      String?
   category         ClubCategory
   logo_url         String?
@@ -154,23 +163,34 @@ model Club {
   instagram_url    String?
   linkedin_url     String?
   twitter_url      String?
-  status           ClubStatus  @default(pending)
+  status           ClubStatus   @default(pending)
   rejection_reason String?
-  member_count     Int         @default(0)  // cached counter
+  member_count     Int          @default(0) // cached counter
 
   created_by       String
-  creator          User        @relation("ClubCreator", fields: [created_by], references: [id])
+  creator          User         @relation("ClubCreator", fields: [created_by], references: [id])
   approved_by      String?
   approved_at      DateTime?
 
-  created_at       DateTime    @default(now())
-  updated_at       DateTime    @updatedAt
+  created_at       DateTime     @default(now())
+  updated_at       DateTime     @updatedAt
+
+  // ── Phase 2 fields ────────────────────────────────────────────────
+  ranking_score    Float        @default(0)
+  ranking_tier     String       @default("unranked") // gold | silver | bronze | unranked
+  ranking_rank     Int?
+  skill_areas      String[]     @default([])
+  tags             String[]     @default([])
+  is_featured      Boolean      @default(false)
+  engagement_score Float        @default(0)
 
   // Relations
-  members          UserClub[]
-  events           Event[]
-  communities      Community[]
-  audit_logs       AuditLog[]  @relation("AuditClub")
+  members           UserClub[]
+  events            Event[]
+  communities       Community[]
+  audit_logs        AuditLog[]              @relation("AuditClub")
+  ranking_snapshots club_ranking_snapshots[] // Phase 2
+  suggestions       suggestions[]           // Phase 2
 
   @@index([status])
   @@index([category])
@@ -209,7 +229,7 @@ model Event {
   venue_lng              Float?
   geo_fence_radius       Float?      // meters, for Phase 3 geo-attendance
   capacity               Int
-  registration_count     Int         @default(0)  // cached counter
+  registration_count     Int         @default(0) // cached counter
   registration_deadline  DateTime?
   event_type             EventType   @default(other)
   is_published           Boolean     @default(false)
@@ -222,16 +242,20 @@ model Event {
   pin_attendance_enabled Boolean     @default(false)
   geo_attendance_enabled Boolean     @default(false)
 
-  club                   Club        @relation(fields: [club_id], references: [id], onDelete: Cascade)
+  // ── Phase 2 fields ────────────────────────────────────────────────
+  skill_areas      String[]    @default([])
+  is_featured      Boolean     @default(false)
+  engagement_score Float       @default(0)
 
-  created_at             DateTime    @default(now())
-  updated_at             DateTime    @updatedAt
+  club             Club        @relation(fields: [club_id], references: [id], onDelete: Cascade)
+
+  created_at       DateTime    @default(now())
+  updated_at       DateTime    @updatedAt
 
   // Relations
-  registrations          EventRegistration[]
-  attendance_logs        AttendanceLog[]
-  qr_codes               EventQrCode[]
-  
+  registrations    EventRegistration[]
+  attendance_logs  AttendanceLog[]
+  qr_codes         EventQrCode[]
 
   @@index([club_id])
   @@index([date])
@@ -326,7 +350,7 @@ model CommunityAccessCode {
   id            String         @id @default(uuid())
   community_id  String
   code_hash     String         @unique
-  assigned_role ClubMemberRole @default(member)  // single role per code
+  assigned_role ClubMemberRole @default(member) // single role per code
   is_revoked    Boolean        @default(false)
   usage_count   Int            @default(0)
   max_uses      Int?
@@ -415,3 +439,43 @@ model AuditLog {
   @@index([created_at])
   @@map("audit_log")
 }
+
+// ─── Phase 2 — Club Rankings & Suggestions ───────────────────────────────────
+
+model club_ranking_snapshots {
+  id                String   @id @default(uuid())
+  club_id           String
+  ranking_score     Float    @default(0)
+  rank              Int      @default(0)
+  attendance_rate   Float    @default(0)
+  events_held       Float    @default(0)
+  member_engagement Float    @default(0)
+  feedback_score    Float    @default(0)
+  social_activity   Float    @default(0)
+  tier              String   @default("unranked") // gold | silver | bronze | unranked
+  computed_at       DateTime @default(now())
+
+  club              Club     @relation(fields: [club_id], references: [id], onDelete: Cascade)
+
+  @@index([club_id])
+  @@index([computed_at])
+}
+
+model suggestions {
+  id         String            @id @default(uuid())
+  club_id    String
+  user_id    String
+  title      String
+  body       String            @db.Text
+  status     suggestion_status @default(pending)
+  admin_note String?           @db.Text
+  created_at DateTime          @default(now())
+  updated_at DateTime          @updatedAt
+
+  club       Club              @relation(fields: [club_id], references: [id], onDelete: Cascade)
+  user       User              @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([club_id])
+  @@index([status])
+}
+

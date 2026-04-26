@@ -7,6 +7,10 @@ interface UseEventsOptions {
   clubId?: string;
   type?: string;
   search?: string;
+  tags?: string[];
+  skillAreas?: string[];
+  volunteerHoursMin?: number;
+  isFeatured?: boolean;
   autoFetch?: boolean;
 }
 
@@ -26,6 +30,10 @@ export const useEvents = (options: UseEventsOptions = {}) => {
         clubId: options.clubId,
         type: options.type,
         search: options.search,
+        tags: options.tags,
+        skillAreas: options.skillAreas,
+        volunteerHoursMin: options.volunteerHoursMin,
+        isFeatured: options.isFeatured,
       });
       if (p === 1) setEvents(data.data);
       else setEvents((prev) => [...prev, ...data.data]);
@@ -36,7 +44,15 @@ export const useEvents = (options: UseEventsOptions = {}) => {
     } finally {
       setLoading(false);
     }
-  }, [options.clubId, options.type, options.search]);
+  }, [
+    options.clubId,
+    options.type,
+    options.search,
+    options.tags,
+    options.skillAreas,
+    options.volunteerHoursMin,
+    options.isFeatured,
+  ]);
 
   useEffect(() => {
     if (options.autoFetch !== false) fetchEvents(1); // eslint-disable-line react-hooks/set-state-in-effect

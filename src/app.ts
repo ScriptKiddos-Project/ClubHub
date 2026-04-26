@@ -17,6 +17,7 @@ import attendanceRoutes   from "./routes/attendance.routes";
 import notificationRoutes from "./routes/notification.routes";
 import adminRoutes        from "./routes/admin.routes";
 import userRoutes         from "./routes/user.routes";
+import { rankingRouter, suggestionRouter } from './routes/phase2Routes';
 
 // ── Bull Queue Workers (import to register processors) ────────────────────────
 // These must be imported here so Bull workers start with the server.
@@ -126,6 +127,8 @@ app.use("/api/v1/events",        attendanceRoutes);   // Phase 1C: /events/:id/q
 app.use("/api/v1/notifications", notificationRoutes);
 app.use("/api/v1/admin",         adminRoutes);
 app.use("/api/v1/users",         userRoutes);
+app.use('/api/v1', rankingRouter);
+app.use('/api/v1', suggestionRouter);
 
 // ── 404 + Error Handling (must be last) ───────────────────────────────────────
 app.use(notFoundHandler);

@@ -8,6 +8,7 @@ import eventRouter from './event.routes';
 import attendanceRouter from './attendance.routes';
 import notificationRouter from './notification.routes';
 import adminRouter from './admin.routes';
+import { rankingRouter, suggestionRouter } from './phase2Routes';
 
 const router = Router();
 
@@ -37,5 +38,9 @@ router.use('/api/v1/admin', adminRouter);
 
 // Admin — communities
 router.use('/api/v1/admin/communities', communityRouter);
+
+// Phase 2
+router.use('/api/v1', rankingRouter);
+router.use('/api/v1', suggestionRouter);
 
 export default router;

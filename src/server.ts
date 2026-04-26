@@ -1,6 +1,6 @@
 // server/src/server.ts
 // Entry point — starts the HTTP server.
-
+import { startRankingCron } from './jobs/rankingCron';
 import "dotenv/config";
 import app from "./app";
 import prisma from "./config/database";
@@ -17,6 +17,7 @@ async function bootstrap() {
       console.log(`🚀 ClubHub API running on http://localhost:${PORT}`);
       console.log(`   Environment: ${process.env.NODE_ENV ?? "development"}`);
     });
+    startRankingCron();
 
     // ── Graceful shutdown ─────────────────────────────────────────────────────
     const shutdown = async (signal: string) => {

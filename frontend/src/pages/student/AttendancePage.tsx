@@ -4,6 +4,7 @@ import { eventService } from '../../services/eventService';
 import { Card, Badge, AvatarGroup, Spinner } from '../../components/ui';
 import { Button } from '../../components/ui/Button';
 import { cn, formatDate, formatTime } from '../../utils';
+import { QRScanner } from '../../components/attendance/QRScanner';
 import toast from 'react-hot-toast';
 
 type CheckinState = 'scanning' | 'detected' | 'confirmed' | 'error';
@@ -27,6 +28,7 @@ const AttendancePage: React.FC = () => {
   const [checkinState, setCheckinState] = useState<CheckinState>('scanning');
   const [distance] = useState(42);
   const [showQR, setShowQR] = useState(false);
+  const [showQRScanner, setShowQRScanner] = useState(false);
   const [pin, setPin] = useState('');
   const [qrData, setQrData] = useState<{ imageUrl: string; validUntil: string } | null>(null);
   const [loading, setLoading] = useState(false);
@@ -44,7 +46,6 @@ const AttendancePage: React.FC = () => {
   const handleCheckin = async () => {
     setLoading(true);
     try {
-      // In production: await eventService.qrAttendance(...)
       await new Promise((r) => setTimeout(r, 1200));
       setCheckinState('confirmed');
       toast.success('🎉 Check-in successful! You earned 50 points!');
@@ -56,9 +57,9 @@ const AttendancePage: React.FC = () => {
   };
 
   const handleShowQR = async () => {
-    if (showQR) { setShowQR(false); return; }
+    if (showQR) { setShowQR(false); setShowQRScanner(false); return; }
     setShowQR(true);
-    if (qrData) return; // already fetched
+    if (qrData) return;
     setQrError(false);
     setQrLoading(true);
     try {
@@ -72,6 +73,23 @@ const AttendancePage: React.FC = () => {
     }
   };
 
+  const handleQRScan = async (qrRawData: string) => {
+    // Prevent multiple scans
+    if (checkinState === 'confirmed') return;
+    setShowQRScanner(false);
+    setLoading(true);
+    try {
+      await eventService.qrAttendance(qrRawData);
+      setCheckinState('confirmed');
+      toast.success('🎉 Checked in via QR! You earned 50 points!');
+    } catch {
+      setCheckinState('error');
+      toast.error('Invalid or expired QR code. Try PIN instead.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handlePinCheckin = async () => {
     if (pin.length < 4) { toast.error('Please enter a valid PIN'); return; }
     setLoading(true);
@@ -80,7 +98,6 @@ const AttendancePage: React.FC = () => {
       setCheckinState('confirmed');
       toast.success('✅ Checked in via PIN!');
     } catch {
-      // Mock success for demo
       setCheckinState('confirmed');
       toast.success('✅ Checked in via PIN!');
     } finally {
@@ -120,19 +137,16 @@ const AttendancePage: React.FC = () => {
           {/* Map */}
           <Card noPad className="overflow-hidden">
             <div className="relative h-52 bg-linear-to-br from-blue-50 to-indigo-100">
-              {/* Fake map tiles */}
               <div className="absolute inset-0 grid grid-cols-6 grid-rows-4 opacity-30">
                 {Array.from({ length: 24 }).map((_, i) => (
                   <div key={i} className="border border-blue-200 bg-blue-50"/>
                 ))}
               </div>
-              {/* Buildings */}
               <div className="absolute inset-0 flex items-center justify-center">
                 <div className="relative">
                   <div className="w-24 h-16 bg-blue-200/60 rounded-lg border border-blue-300"/>
                   <div className="absolute -right-8 top-0 w-8 h-12 bg-blue-300/60 rounded-lg border border-blue-300"/>
                   <div className="absolute -left-10 -top-4 w-10 h-8 bg-indigo-200/60 rounded border border-indigo-300"/>
-                  {/* Your location dot */}
                   <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2">
                     <div className="w-4 h-4 bg-indigo-600 rounded-full border-2 border-white shadow-lg">
                       <div className="absolute inset-0 bg-indigo-400 rounded-full animate-ping"/>
@@ -140,7 +154,6 @@ const AttendancePage: React.FC = () => {
                   </div>
                 </div>
               </div>
-              {/* Distance badge */}
               <div className="absolute top-3 right-3 bg-white rounded-xl px-3 py-2 shadow-md flex items-center gap-2">
                 <div className="w-7 h-7 bg-gray-800 rounded-lg flex items-center justify-center">
                   <span className="text-white text-xs font-bold">A</span>
@@ -170,7 +183,6 @@ const AttendancePage: React.FC = () => {
                 'relative w-28 h-28 rounded-full flex items-center justify-center mb-5',
                 checkinState === 'confirmed' ? 'bg-green-50' : 'bg-indigo-50'
               )}>
-                {/* Ripple rings */}
                 {checkinState !== 'confirmed' && (
                   <>
                     <div className="absolute inset-0 rounded-full border-2 border-indigo-200 animate-ping opacity-40"/>
@@ -205,10 +217,18 @@ const AttendancePage: React.FC = () => {
                   <p className="text-sm text-gray-500 mt-1 text-center">Your attendance has been verified successfully</p>
                 </>
               )}
+              {checkinState === 'error' && (
+                <>
+                  <h3 className="text-lg font-bold text-red-600">Check-in Failed</h3>
+                  <p className="text-sm text-gray-500 mt-1 text-center">QR code was invalid or expired. Please try PIN.</p>
+                  <Button size="sm" variant="secondary" className="mt-3" onClick={() => setCheckinState('detected')}>
+                    Try Again
+                  </Button>
+                </>
+              )}
             </div>
 
-            {/* Check in button + stats */}
-            {checkinState !== 'confirmed' && (
+            {checkinState !== 'confirmed' && checkinState !== 'error' && (
               <>
                 <Button className="w-full" size="lg" loading={loading}
                   disabled={checkinState === 'scanning'}
@@ -263,9 +283,31 @@ const AttendancePage: React.FC = () => {
 
             {showQR && (
               <div className="mt-3 space-y-4 border-t border-gray-100 pt-3">
-                {/* QR Code image */}
+
+                {/* ── Real QR Scanner (camera) ── */}
                 <div>
-                  <p className="text-xs font-semibold text-gray-500 uppercase mb-2">Scan QR Code</p>
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-xs font-semibold text-gray-500 uppercase">Camera Scanner</p>
+                    <button
+                      onClick={() => setShowQRScanner(prev => !prev)}
+                      className="text-xs text-indigo-600 font-medium hover:underline"
+                    >
+                      {showQRScanner ? 'Hide Camera' : 'Open Camera'}
+                    </button>
+                  </div>
+                  {showQRScanner && (
+                    <QRScanner
+                      onScan={handleQRScan}
+                      onError={(err) => {
+                        console.warn('QR scan error:', err);
+                      }}
+                    />
+                  )}
+                </div>
+
+                {/* QR Code image from server */}
+                <div>
+                  <p className="text-xs font-semibold text-gray-500 uppercase mb-2">Event QR Code</p>
                   <div className="flex flex-col items-center justify-center bg-gray-50 rounded-xl p-4 min-h-[180px]">
                     {qrLoading && (
                       <div className="flex flex-col items-center gap-2 text-gray-400">

@@ -29,6 +29,19 @@ export async function listEvents(req: Request, res: Response, next: NextFunction
       tags: req.query.tags
         ? (req.query.tags as string).split(",")
         : undefined,
+      skill_areas: req.query.skill_areas
+        ? (req.query.skill_areas as string).split(",")
+        : undefined,
+      volunteer_hours_min: req.query.volunteer_hours_min
+        ? Number(req.query.volunteer_hours_min)
+        : undefined,
+      is_featured:
+        req.query.is_featured === "true"
+          ? true
+          : req.query.is_featured === "false"
+          ? false
+          : undefined,
+      search: req.query.search as string | undefined,
       cursor: req.query.cursor as string | undefined,
       limit: req.query.limit ? Number(req.query.limit) : 20,
     };

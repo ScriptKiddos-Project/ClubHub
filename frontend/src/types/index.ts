@@ -120,6 +120,9 @@ export interface Event {
   pointsReward: number;
   volunteerHours: number;
   tags: string[];
+  skillAreas?: string[];
+  isFeatured?: boolean;
+  engagementScore?: number;
   isRegistered?: boolean;
   attendanceStatus?: AttendanceStatus;
   aiMatchScore?: number;

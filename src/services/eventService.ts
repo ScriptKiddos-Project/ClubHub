@@ -35,7 +35,20 @@ export async function listEvents(
   filters: EventFilters,
   requestingUser?: { id: string; role: Role }
 ): Promise<PaginatedResponse<EventListItem>> {
-  const { club_id, type, date_from, date_to, is_free, tags, cursor, limit = 20 } = filters;
+  const {
+    club_id,
+    type,
+    date_from,
+    date_to,
+    is_free,
+    tags,
+    skill_areas,
+    volunteer_hours_min,
+    is_featured,
+    search,
+    cursor,
+    limit = 20,
+  } = filters;
 
   // Non-admins only see published events
   const is_published =
@@ -51,6 +64,10 @@ export async function listEvents(
   if (type) where.event_type = type;
   if (is_published !== undefined) where.is_published = is_published;
   if (is_free !== undefined) where.is_free = is_free;
+  if (is_featured !== undefined) where.is_featured = is_featured;
+  if (volunteer_hours_min !== undefined) {
+    where.volunteer_hours = { gte: volunteer_hours_min };
+  }
 
   if (date_from || date_to) {
     where.date = {};
@@ -60,6 +77,19 @@ export async function listEvents(
 
   if (tags && tags.length > 0) {
     where.tags = { hasSome: tags };
+  }
+
+  if (skill_areas && skill_areas.length > 0) {
+    where.skill_areas = { hasSome: skill_areas };
+  }
+
+  if (search) {
+    where.OR = [
+      { title: { contains: search, mode: "insensitive" } },
+      { description: { contains: search, mode: "insensitive" } },
+      { venue: { contains: search, mode: "insensitive" } },
+      { club: { name: { contains: search, mode: "insensitive" } } },
+    ];
   }
 
   // Cursor-based pagination
@@ -113,6 +143,9 @@ export async function listEvents(
       points_reward: e.points_reward,
       volunteer_hours: e.volunteer_hours,
       tags: e.tags,
+      skill_areas: e.skill_areas,
+      is_featured: e.is_featured,
+      engagement_score: e.engagement_score,
       banner_url: e.banner_url,
       registration_deadline: e.registration_deadline,
       is_registered: registeredEventIds.has(e.id),

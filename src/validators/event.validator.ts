@@ -100,6 +100,16 @@ export const listEventsSchema = z.object({
       .string()
       .optional()
       .transform((v) => (v ? v.split(",") : undefined)),
+    skill_areas: z
+      .string()
+      .optional()
+      .transform((v) => (v ? v.split(",") : undefined)),
+    volunteer_hours_min: z.coerce.number().min(0).optional(),
+    is_featured: z
+      .string()
+      .optional()
+      .transform((v) => (v === "true" ? true : v === "false" ? false : undefined)),
+    search: z.string().trim().optional(),
     cursor: z.string().optional(),
     limit: z.coerce.number().int().min(1).max(100).default(20),
   }),

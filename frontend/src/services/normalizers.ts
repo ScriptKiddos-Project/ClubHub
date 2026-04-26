@@ -63,6 +63,9 @@ const asNumber = (value: unknown, fallback = 0): number =>
 const asBoolean = (value: unknown, fallback = false): boolean =>
   typeof value === 'boolean' ? value : fallback;
 
+const asStringArray = (value: unknown): string[] =>
+  Array.isArray(value) ? value.map((item) => String(item)) : [];
+
 const isoString = (value: unknown): string => {
   if (typeof value === 'string') return value;
   if (value instanceof Date) return value.toISOString();
@@ -159,6 +162,13 @@ export const normalizeEvent = (value: unknown): Event => {
     pointsReward: asNumber(raw.pointsReward ?? raw.points_reward),
     volunteerHours: asNumber(raw.volunteerHours ?? raw.volunteer_hours),
     tags: Array.isArray(raw.tags) ? raw.tags.map((tag) => String(tag)) : [],
+    skillAreas: asStringArray(raw.skillAreas ?? raw.skill_areas),
+    isFeatured: asBoolean(raw.isFeatured ?? raw.is_featured),
+    engagementScore: typeof raw.engagementScore === 'number'
+      ? raw.engagementScore
+      : typeof raw.engagement_score === 'number'
+      ? raw.engagement_score
+      : undefined,
     isRegistered: asBoolean(raw.isRegistered ?? raw.is_registered),
     attendanceStatus:
       typeof raw.attendanceStatus === 'string'

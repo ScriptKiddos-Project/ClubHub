@@ -2,7 +2,7 @@ import React from 'react';
 import { NavLink } from 'react-router-dom';
 import {
   LayoutDashboard, Compass, Calendar, BarChart2, Users, Settings,
-  User, X, BookOpen, Shield
+  User, X, BookOpen, Shield, Trophy
 } from 'lucide-react';
 import { cn } from '../../utils';
 import { useAuthStore } from '../../store/authStore';
@@ -17,21 +17,21 @@ interface NavItem {
 }
 
 const navItems: NavItem[] = [
-  { label: 'Dashboard',  path: '/dashboard',          icon: <LayoutDashboard size={18}/> },
-  { label: 'Discovery',  path: '/events',             icon: <Compass size={18}/> },
-  { label: 'Clubs',      path: '/clubs',              icon: <BookOpen size={18}/> },
-  { label: 'Attendance', path: '/attendance',         icon: <Calendar size={18}/> },
-  { label: 'Analytics',  path: '/analytics',          icon: <BarChart2 size={18}/> },
-  { label: 'Management', path: '/management',         icon: <Users size={18}/>,     roles: ['secretary','event_manager','super_admin'] },
-  { label: 'Admin',      path: '/admin/dashboard',    icon: <Shield size={18}/>,    roles: ['super_admin','secretary','event_manager'] },
-  { label: 'Profile',    path: '/profile',            icon: <User size={18}/> },
-  { label: 'Settings',   path: '/settings',           icon: <Settings size={18}/> },
+  { label: 'Dashboard',  path: '/dashboard',       icon: <LayoutDashboard size={18}/> },
+  { label: 'Discovery',  path: '/events',          icon: <Compass size={18}/> },
+  { label: 'Clubs',      path: '/clubs',           icon: <BookOpen size={18}/> },
+  { label: 'Rankings',   path: '/rankings',        icon: <Trophy size={18}/> },
+  { label: 'Attendance', path: '/attendance',      icon: <Calendar size={18}/> },
+  { label: 'Analytics',  path: '/analytics',       icon: <BarChart2 size={18}/> },
+  { label: 'Management', path: '/management',      icon: <Users size={18}/>,  roles: ['secretary','event_manager','super_admin'] },
+  { label: 'Admin',      path: '/admin/dashboard', icon: <Shield size={18}/>, roles: ['super_admin','secretary','event_manager'] },
+  { label: 'Profile',    path: '/profile',         icon: <User size={18}/> },
+  { label: 'Settings',   path: '/settings',        icon: <Settings size={18}/> },
 ];
 
 export const Sidebar: React.FC = () => {
   const { user } = useAuthStore();
   const { sidebarOpen, setSidebarOpen } = useUIStore();
-
 
   const visibleItems = navItems.filter((item) =>
     !item.roles || (user && item.roles.includes(user.role))
@@ -94,8 +94,6 @@ export const Sidebar: React.FC = () => {
           </div>
         </nav>
 
-        {/* Campus OS tag */}
-        
       </aside>
     </>
   );
