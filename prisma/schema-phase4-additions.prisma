@@ -1,0 +1,141 @@
+// ─── ADD to prisma/schema.prisma ─────────────────────────────────────────────
+// Append these models at the bottom of the existing schema.
+// Do NOT redefine User, Club, or any existing model.
+// Run: npx prisma migrate dev --name phase4_chat_recruitment
+
+// ─── New Enums ────────────────────────────────────────────────────────────────
+
+enum RoomType {
+  club
+  event
+}
+
+enum ApplicationStatus {
+  pending
+  shortlisted
+  rejected
+  accepted
+}
+
+enum InterviewResult {
+  accepted
+  rejected
+}
+
+// Also ADD these values to the existing NotificationType enum:
+//   chat_message
+//   announcement
+//   application_update
+//   interview_scheduled
+//   interview_result
+// (Edit the existing NotificationType enum in schema.prisma directly)
+
+// ─── Phase 4 Models ───────────────────────────────────────────────────────────
+
+model ChatRoom {
+  id         String    @id @default(uuid())
+  type       RoomType
+  ref_id     String    // club_id or event_id — not a FK so it works for both
+  is_archived Boolean  @default(false)
+  created_at DateTime  @default(now())
+  messages   ChatMessage[]
+
+  @@unique([type, ref_id])
+  @@index([type, ref_id])
+  @@map("chat_rooms")
+}
+
+model ChatMessage {
+  id              String   @id @default(uuid())
+  room_id         String
+  sender_id       String   // FK → users.id
+  content         String
+  is_announcement Boolean  @default(false)
+  created_at      DateTime @default(now())
+
+  room   ChatRoom @relation(fields: [room_id], references: [id], onDelete: Cascade)
+  sender User     @relation("SentMessages", fields: [sender_id], references: [id], onDelete: Cascade)
+
+  @@index([room_id])
+  @@index([sender_id])
+  @@map("chat_messages")
+}
+
+model Announcement {
+  id         String   @id @default(uuid())
+  club_id    String   // FK → clubs.id
+  posted_by  String   // FK → users.id
+  title      String
+  body       String   @db.Text
+  created_at DateTime @default(now())
+
+  club   Club @relation("ClubAnnouncements", fields: [club_id], references: [id], onDelete: Cascade)
+  author User @relation("PostedAnnouncements", fields: [posted_by], references: [id])
+
+  @@index([club_id])
+  @@map("announcements")
+}
+
+model RecruitmentApplication {
+  id         String            @id @default(uuid())
+  club_id    String            // FK → clubs.id
+  user_id    String            // FK → users.id
+  form_data  Json
+  status     ApplicationStatus @default(pending)
+  created_at DateTime          @default(now())
+  updated_at DateTime          @updatedAt
+
+  club       Club       @relation("ClubApplications", fields: [club_id], references: [id], onDelete: Cascade)
+  applicant  User       @relation("UserApplications", fields: [user_id], references: [id], onDelete: Cascade)
+  interviews Interview[]
+
+  @@unique([club_id, user_id]) // one application per user per club
+  @@index([club_id])
+  @@index([user_id])
+  @@map("recruitment_applications")
+}
+
+model Interview {
+  id             String          @id @default(uuid())
+  application_id String
+  club_id        String          // FK → clubs.id
+  candidate_id   String          // FK → users.id
+  slot_time      DateTime
+  result         InterviewResult?
+  created_at     DateTime        @default(now())
+
+  application RecruitmentApplication @relation(fields: [application_id], references: [id], onDelete: Cascade)
+  club        Club @relation("ClubInterviews", fields: [club_id], references: [id])
+  candidate   User @relation("UserInterviews", fields: [candidate_id], references: [id])
+
+  @@index([application_id])
+  @@index([club_id])
+  @@index([candidate_id])
+  @@map("interviews")
+}
+
+model NotificationPreference {
+  id             String   @id @default(uuid())
+  user_id        String   @unique // FK → users.id
+  email_enabled  Boolean  @default(true)
+  push_enabled   Boolean  @default(true)
+  types          String[] @default([]) // which NotificationType keys to receive
+  updated_at     DateTime @updatedAt
+
+  user User @relation("UserNotifPrefs", fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@map("notification_preferences")
+}
+
+// ─── ADD these relation fields to existing models ─────────────────────────────
+// In model User, add:
+//   sent_messages         ChatMessage[]           @relation("SentMessages")
+//   posted_announcements  Announcement[]          @relation("PostedAnnouncements")
+//   applications          RecruitmentApplication[] @relation("UserApplications")
+//   interviews            Interview[]             @relation("UserInterviews")
+//   notification_pref     NotificationPreference? @relation("UserNotifPrefs")
+//
+// In model Club, add:
+//   announcements   Announcement[]          @relation("ClubAnnouncements")
+//   applications    RecruitmentApplication[] @relation("ClubApplications")
+//   interviews      Interview[]             @relation("ClubInterviews")

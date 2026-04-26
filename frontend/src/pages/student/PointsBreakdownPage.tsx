@@ -1,7 +1,7 @@
 // pages/student/PointsBreakdownPage.tsx
 // Full AICTE points history with multiplier breakdown and running total chart.
 
-import React, { useState } from 'react';
+import React from 'react';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell,
 } from 'recharts';

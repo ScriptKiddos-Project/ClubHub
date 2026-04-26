@@ -2,7 +2,7 @@
 // Real-time chat window: virtual-scrolled message list, typing indicators,
 // connection badge, and message input. Used inside MessagesPagePhase4.
 
-import React, { useEffect, useRef, useCallback, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Send, Wifi, WifiOff, Loader2, Archive, Megaphone } from 'lucide-react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { cn } from '../../utils';
