@@ -1,4 +1,6 @@
-// src/routes/index.ts
+// src/routes/index.ts  ──  Updated for Phase 3
+// Replace your existing src/routes/index.ts with this file.
+
 import { Router } from 'express';
 import authRouter, { communityRouter } from './auth.routes';
 import healthRouter from './health.routes';
@@ -9,6 +11,7 @@ import attendanceRouter from './attendance.routes';
 import notificationRouter from './notification.routes';
 import adminRouter from './admin.routes';
 import { rankingRouter, suggestionRouter } from './phase2Routes';
+import { geoAttendanceRouter, profileRouter } from './phase3Routes';   // ← Phase 3
 
 const router = Router();
 
@@ -21,14 +24,20 @@ router.use('/api/v1/auth', authRouter);
 // Users
 router.use('/api/v1/users', userRouter);
 
+// Phase 3 — Profile / achievements / resume / certificates
+router.use('/api/v1/users', profileRouter);
+
 // Clubs
 router.use('/api/v1/clubs', clubRouter);
 
 // Events
 router.use('/api/v1/events', eventRouter);
 
-// Attendance
+// Attendance (Phase 1C — QR, PIN, manual, bulk)
 router.use('/api/v1/events', attendanceRouter);
+
+// Phase 3 — Geo-fence attendance
+router.use('/api/v1/events', geoAttendanceRouter);
 
 // Notifications
 router.use('/api/v1/notifications', notificationRouter);
@@ -39,7 +48,7 @@ router.use('/api/v1/admin', adminRouter);
 // Admin — communities
 router.use('/api/v1/admin/communities', communityRouter);
 
-// Phase 2
+// Phase 2 — Rankings & Suggestions
 router.use('/api/v1', rankingRouter);
 router.use('/api/v1', suggestionRouter);
 

@@ -35,3 +35,15 @@ export const BulkAttendanceSchema = z.object({
 export const NotificationReadSchema = z.object({
   id: z.string().uuid('Invalid notification ID'),
 });
+export const GeoAttendanceSchema = z.object({
+  lat: z
+    .number({ required_error: 'lat is required', invalid_type_error: 'lat must be a number' })
+    .min(-90, 'lat must be >= -90')
+    .max(90,  'lat must be <= 90'),
+  lon: z
+    .number({ required_error: 'lon is required', invalid_type_error: 'lon must be a number' })
+    .min(-180, 'lon must be >= -180')
+    .max(180,  'lon must be <= 180'),
+});
+
+export type GeoAttendanceInput = z.infer<typeof GeoAttendanceSchema>;

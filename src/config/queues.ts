@@ -32,17 +32,28 @@ export const reminderQueue = new Bull('reminder', redisUrl, {
   },
 });
 
+// ── Certificate Queue (Phase 3) ───────────────────────────────────────────────
+export const certificateQueue = new Bull('certificate', redisUrl, {
+  defaultJobOptions: {
+    attempts: 3,
+    backoff: { type: 'exponential', delay: 5000 },
+    removeOnComplete: 100,
+    removeOnFail: 50,
+  },
+});
+
 // ── Job Type Enums ───────────────────────────────────────────────────────────
 export enum EmailJobType {
   REGISTRATION_CONFIRMATION = 'registration_confirmation',
-  EVENT_REMINDER = 'event_reminder',
-  WELCOME_EMAIL = 'welcome_email',
-  EVENT_CANCELLATION = 'event_cancellation',
+  EVENT_REMINDER            = 'event_reminder',
+  WELCOME_EMAIL             = 'welcome_email',
+  EVENT_CANCELLATION        = 'event_cancellation',
+  CERTIFICATE               = 'certificate',   // Phase 3
 }
 
 export enum NotificationJobType {
   IN_APP = 'in_app',
-  PUSH = 'push',
+  PUSH   = 'push',
 }
 
 // ── Payload Interfaces ───────────────────────────────────────────────────────
@@ -83,6 +94,16 @@ export interface CancellationEmailPayload {
   reason?: string;
 }
 
+// Phase 3
+export interface CertificateEmailPayload {
+  to: string;
+  studentName: string;
+  eventTitle: string;
+  clubName: string;
+  pdfBase64: string;
+}
+
+// ── Queue failure listeners ───────────────────────────────────────────────────
 emailQueue.on('failed', (job, err) => {
   console.error(`[EmailQueue] Job ${job.id} failed after ${job.attemptsMade} attempts:`, err.message);
 });
@@ -95,4 +116,8 @@ reminderQueue.on('failed', (job, err) => {
   console.error(`[ReminderQueue] Job ${job.id} failed:`, err.message);
 });
 
-console.log('[Queues] Email, Notification, and Reminder queues initialized');
+certificateQueue.on('failed', (job, err) => {
+  console.error(`[CertificateQueue] Job ${job.id} failed:`, err.message);
+});
+
+console.log('[Queues] Email, Notification, Reminder, Certificate queues initialized');

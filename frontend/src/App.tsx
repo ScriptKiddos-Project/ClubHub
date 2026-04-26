@@ -20,7 +20,6 @@ const CreateEventPage    = lazy(() => import('./pages/student/CreateEventPage'))
 const ClubsPage          = lazy(() => import('./pages/student/ClubsPage'));
 const AttendancePage     = lazy(() => import('./pages/student/AttendancePage'));
 const AnalyticsPage      = lazy(() => import('./pages/student/AnalyticsPage'));
-const ProfilePage        = lazy(() => import('./pages/student/ProfilePage'));
 const MessagesPage       = lazy(() => import('./pages/student/MessagesPage'));
 
 // ── Admin (lazy-loaded)
@@ -29,11 +28,17 @@ const SuperAdminPage     = lazy(() => import('./pages/admin/SuperAdminPage'));
 const AttendanceReport   = lazy(() => import('./pages/admin/AttendanceReportPage'));
 const MemberRosterPage   = lazy(() => import('./pages/admin/MemberRosterPage'));
 
-// ── Phase 2 (lazy-loaded) — replaces EventsPage & ClubDetailPage
+// ── Phase 2 (lazy-loaded)
 const ClubDetailPagePhase2 = lazy(() => import('./pages/student/ClubDetailPagePhase2'));
 const EventsPagePhase2     = lazy(() => import('./pages/student/EventsPagePhase2'));
 const ClubRankingsPage     = lazy(() => import('./pages/student/ClubRankingsPage'));
 const AdminPhase2Page      = lazy(() => import('./pages/admin/AdminPhase2Page'));
+
+// ── Phase 3 (lazy-loaded) ─── NEW ────────────────────────────────────────────
+const ProfilePagePhase3    = lazy(() => import('./pages/student/ProfilePagePhase3'));
+const PointsBreakdownPage  = lazy(() => import('./pages/student/PointsBreakdownPage'));
+const AttendanceConfigPage = lazy(() => import('./pages/admin/AttendanceConfigPage'));
+// ─────────────────────────────────────────────────────────────────────────────
 
 // ── Misc
 import { SettingsPage, ManagementPage, NotFoundPage, UnauthorizedPage } from './pages/misc';
@@ -74,7 +79,9 @@ const App: React.FC = () => (
               <Route path="/rankings"      element={<ClubRankingsPage/>}/>
               <Route path="/attendance"    element={<AttendancePage/>}/>
               <Route path="/analytics"     element={<AnalyticsPage/>}/>
-              <Route path="/profile"       element={<ProfilePage/>}/>
+              {/* Phase 3: updated profile + new points page */}
+              <Route path="/profile"       element={<ProfilePagePhase3/>}/>
+              <Route path="/points"        element={<PointsBreakdownPage/>}/>
               <Route path="/messages"      element={<MessagesPage/>}/>
               <Route path="/management"    element={<ManagementPage/>}/>
               <Route path="/settings"      element={<SettingsPage/>}/>
@@ -84,11 +91,13 @@ const App: React.FC = () => (
           {/* ── Admin routes (secretary / event_manager) */}
           <Route element={<ProtectedRoute allowedRoles={['super_admin', 'secretary', 'event_manager']}/>}>
             <Route element={<AppLayout/>}>
-              <Route path="/admin/dashboard"                  element={<AdminDashboard/>}/>
-              <Route path="/admin/events/:eventId/attendance" element={<AttendanceReport/>}/>
-              <Route path="/admin/members"                    element={<MemberRosterPage/>}/>
-              <Route path="/super-admin"                      element={<SuperAdminUsersTab/>}/>
-              <Route path="/admin/phase2"                     element={<AdminPhase2Page/>}/>
+              <Route path="/admin/dashboard"                          element={<AdminDashboard/>}/>
+              <Route path="/admin/events/:eventId/attendance"         element={<AttendanceReport/>}/>
+              {/* Phase 3: attendance method config per event */}
+              <Route path="/admin/events/:eventId/attendance-config"  element={<AttendanceConfigPage/>}/>
+              <Route path="/admin/members"                            element={<MemberRosterPage/>}/>
+              <Route path="/super-admin"                              element={<SuperAdminUsersTab/>}/>
+              <Route path="/admin/phase2"                             element={<AdminPhase2Page/>}/>
             </Route>
           </Route>
 

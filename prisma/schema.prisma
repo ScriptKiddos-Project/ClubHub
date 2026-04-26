@@ -143,6 +143,8 @@ model User {
   points_history        PointsHistory[]
   access_code_uses      AccessCodeUsage[]
   suggestions           suggestions[]       // Phase 2
+    badges        Badge[]
+  certificates  Certificate[]
 
   @@index([email])
   @@index([role])
@@ -479,3 +481,50 @@ model suggestions {
   @@index([status])
 }
 
+
+enum BadgeType {
+  first_event          // Attended first event
+  ten_events           // Attended 10 events
+  twenty_five_events   // Attended 25 events
+  core_member          // Has core member access code
+  volunteer_star       // Accumulated 10+ volunteer hours
+  event_organiser      // Organised 5+ events
+  streak_3             // 3 events in a row attended
+}
+
+// ─── Phase 3 — Badges ─────────────────────────────────────────────────────────
+
+model Badge {
+  id           String    @id @default(uuid())
+  user_id      String
+  badge_type   BadgeType
+  awarded_at   DateTime  @default(now())
+  event_id     String?   // which event triggered this badge (if applicable)
+
+  user         User      @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([user_id, badge_type])
+  @@index([user_id])
+  @@map("badges")
+}
+
+// ─── Phase 3 — Certificates ───────────────────────────────────────────────────
+
+model Certificate {
+  id              String   @id @default(uuid())
+  user_id         String
+  event_id        String
+  club_id         String
+  pdf_url         String?  // Cloudinary / local path once generated
+  issued_at       DateTime @default(now())
+  points_awarded  Float    @default(0)
+  hours_awarded   Float    @default(0)
+  multiplier_used Float    @default(1.0)
+
+  user  User  @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([user_id, event_id])
+  @@index([user_id])
+  @@index([event_id])
+  @@map("certificates")
+}
