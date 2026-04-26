@@ -1,3 +1,4 @@
+
 // src/index.ts
 import 'dotenv/config';
 import express from 'express';
@@ -12,6 +13,8 @@ import { notFoundHandler, errorHandler } from './middleware/errorHandler';
 import { generalRateLimiter } from './middleware/rateLimiter';
 import prisma from './config/database';
 import { connectRedis } from './config/redis';
+
+
 
 const app = express();
 const PORT = Number(process.env.PORT) || 5000;
@@ -94,6 +97,8 @@ async function bootstrap() {
     console.log('✅ Database connected');
 
     await connectRedis();
+
+   
 
     app.listen(PORT, () => {
       console.log(`\n🚀 ClubHub API running on http://localhost:${PORT}`);
