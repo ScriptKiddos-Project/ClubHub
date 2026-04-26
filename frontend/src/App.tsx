@@ -20,7 +20,6 @@ const CreateEventPage    = lazy(() => import('./pages/student/CreateEventPage'))
 const ClubsPage          = lazy(() => import('./pages/student/ClubsPage'));
 const AttendancePage     = lazy(() => import('./pages/student/AttendancePage'));
 const AnalyticsPage      = lazy(() => import('./pages/student/AnalyticsPage'));
-const MessagesPage       = lazy(() => import('./pages/student/MessagesPage'));
 
 // ── Admin (lazy-loaded)
 const AdminDashboard     = lazy(() => import('./pages/admin/AdminDashboardPage'));
@@ -34,10 +33,18 @@ const EventsPagePhase2     = lazy(() => import('./pages/student/EventsPagePhase2
 const ClubRankingsPage     = lazy(() => import('./pages/student/ClubRankingsPage'));
 const AdminPhase2Page      = lazy(() => import('./pages/admin/AdminPhase2Page'));
 
-// ── Phase 3 (lazy-loaded) ─── NEW ────────────────────────────────────────────
+// ── Phase 3 (lazy-loaded)
 const ProfilePagePhase3    = lazy(() => import('./pages/student/ProfilePagePhase3'));
 const PointsBreakdownPage  = lazy(() => import('./pages/student/PointsBreakdownPage'));
 const AttendanceConfigPage = lazy(() => import('./pages/admin/AttendanceConfigPage'));
+
+// ── Phase 4 (lazy-loaded) ─── NEW ────────────────────────────────────────────
+const MessagesPagePhase4            = lazy(() => import('./pages/student/MessagesPagePhase4'));
+const AnnouncementsPage             = lazy(() => import('./pages/student/AnnouncementsPage'));
+const NotificationPreferencesPage   = lazy(() => import('./pages/student/NotificationPreferencesPage'));
+const RecruitmentApplicationPage    = lazy(() => import('./pages/student/RecruitmentApplicationPage'));
+const RecruitmentDashboardPage      = lazy(() => import('./pages/admin/RecruitmentDashboardPage'));
+const AnnouncementComposePage       = lazy(() => import('./pages/admin/AnnouncementComposePage'));
 // ─────────────────────────────────────────────────────────────────────────────
 
 // ── Misc
@@ -76,13 +83,18 @@ const App: React.FC = () => (
               <Route path="/events/:id"    element={<EventDetailPage/>}/>
               <Route path="/clubs"         element={<ClubsPage/>}/>
               <Route path="/clubs/:id"     element={<ClubDetailPagePhase2/>}/>
+              {/* Phase 4: recruitment application (student-facing, per club) */}
+              <Route path="/clubs/:clubId/apply" element={<RecruitmentApplicationPage/>}/>
               <Route path="/rankings"      element={<ClubRankingsPage/>}/>
               <Route path="/attendance"    element={<AttendancePage/>}/>
               <Route path="/analytics"     element={<AnalyticsPage/>}/>
-              {/* Phase 3: updated profile + new points page */}
+              {/* Phase 3 */}
               <Route path="/profile"       element={<ProfilePagePhase3/>}/>
               <Route path="/points"        element={<PointsBreakdownPage/>}/>
-              <Route path="/messages"      element={<MessagesPage/>}/>
+              {/* Phase 4: messages, announcements, notification prefs */}
+              <Route path="/messages"      element={<MessagesPagePhase4/>}/>
+              <Route path="/announcements" element={<AnnouncementsPage/>}/>
+              <Route path="/settings/notifications" element={<NotificationPreferencesPage/>}/>
               <Route path="/management"    element={<ManagementPage/>}/>
               <Route path="/settings"      element={<SettingsPage/>}/>
             </Route>
@@ -98,6 +110,9 @@ const App: React.FC = () => (
               <Route path="/admin/members"                            element={<MemberRosterPage/>}/>
               <Route path="/super-admin"                              element={<SuperAdminUsersTab/>}/>
               <Route path="/admin/phase2"                             element={<AdminPhase2Page/>}/>
+              {/* Phase 4: recruitment dashboard + announcement compose (admin) */}
+              <Route path="/admin/clubs/:clubId/recruitment"          element={<RecruitmentDashboardPage/>}/>
+              <Route path="/admin/clubs/:clubId/announcements/new"    element={<AnnouncementComposePage/>}/>
             </Route>
           </Route>
 

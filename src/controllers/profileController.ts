@@ -28,7 +28,7 @@ export async function getPointsHistory(req: Request, res: Response) {
     const limit = parseInt(String(req.query.limit ?? '20'), 10);
 
     const data = await profileService.getPointsHistory(userId, page, limit);
-    return res.status(200).json({ success: true, ...data });
+    return res.status(200).json({ success: true, data });
   } catch (err: unknown) {
     const error = err as Error & { status?: number };
     return res.status(error.status ?? 500).json({
@@ -38,16 +38,28 @@ export async function getPointsHistory(req: Request, res: Response) {
   }
 }
 
-// ── GET /api/v1/users/me/resume — download resume PDF ────────────────────────
-export async function downloadResume(req: Request, res: Response) {
+// ── POST /api/v1/users/me/resume-export ──────────────────────────────────────
+// Returns a JSON { downloadUrl, expiresAt } so the frontend can trigger a
+// browser download without Axios having to handle a raw binary stream.
+// The PDF is generated, saved to a temp path or object-storage, and a
+// short-lived signed URL (or a data-URL for local dev) is returned.
+export async function exportResume(req: Request, res: Response) {
   try {
     const userId = req.user!.id;
     const pdfBuffer = await profileService.exportResumePDF(userId);
 
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', 'attachment; filename="ClubHub_Resume.pdf"');
-    res.setHeader('Content-Length', pdfBuffer.length);
-    return res.send(pdfBuffer);
+    // Convert buffer → base64 data-URL so any environment works out of the box.
+    // In production, swap this for a signed S3/GCS URL with a 5-minute TTL.
+    const base64 = pdfBuffer.toString('base64');
+    const downloadUrl = `data:application/pdf;base64,${base64}`;
+
+    // expiresAt is informational; for data-URLs it doesn't expire.
+    const expiresAt = new Date(Date.now() + 5 * 60 * 1000).toISOString();
+
+    return res.status(200).json({
+      success: true,
+      data: { downloadUrl, expiresAt },
+    });
   } catch (err: unknown) {
     const error = err as Error & { status?: number };
     return res.status(error.status ?? 500).json({

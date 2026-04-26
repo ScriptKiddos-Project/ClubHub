@@ -9,7 +9,7 @@ import { markGeoAttendance } from '../controllers/geoAttendanceController';
 import {
   getAchievements,
   getPointsHistory,
-  downloadResume,
+  exportResume,          // was: downloadResume
   getCertificates,
   downloadCertificate,
 } from '../controllers/profileController';
@@ -59,13 +59,15 @@ profileRouter.get(
 );
 
 /**
- * GET /api/v1/users/me/resume
- * Streams a full-profile resume PDF for download
+ * POST /api/v1/users/me/resume-export
+ * Returns { downloadUrl, expiresAt } JSON — frontend triggers browser download.
+ * Changed from GET /me/resume (which streamed raw PDF) to POST /me/resume-export
+ * so it matches the phase3Service.ts call: api.post('/users/me/resume-export').
  */
-profileRouter.get(
-  '/me/resume',
+profileRouter.post(
+  '/me/resume-export',
   rbac('student', 'member', 'secretary', 'event_manager', 'club_admin', 'super_admin'),
-  downloadResume
+  exportResume
 );
 
 /**

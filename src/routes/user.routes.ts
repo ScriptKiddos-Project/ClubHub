@@ -4,6 +4,7 @@ import { authenticate } from "../middleware/auth";
 import * as eventController from "../controllers/eventController";
 import * as analyticsController from "../controllers/analyticsController";
 import prisma from "../config/database";
+import * as profileController from '../controllers/profileController';
 
 const router = Router();
 
@@ -35,5 +36,13 @@ router.get("/me/dashboard", authenticate, eventController.getStudentDashboard);
 
 // GET /api/v1/users/me/stats
 router.get("/me/stats", authenticate, analyticsController.getStudentStats);
+router.get('/me/achievements',    authenticate, profileController.getAchievements);
+router.get('/me/points-history',  authenticate, profileController.getPointsHistory);
+router.post('/me/resume-export',  authenticate, profileController.exportResume);
+// GET /api/v1/users/me/certificates
+router.get("/me/certificates", authenticate, profileController.getCertificates);
+ 
+// GET /api/v1/users/me/certificates/:certId/download
+router.get("/me/certificates/:certId/download", authenticate, profileController.downloadCertificate);
 
 export default router;
