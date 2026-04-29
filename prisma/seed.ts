@@ -165,7 +165,7 @@ async function seedUsers(): Promise<DbRecord> {
     // Super Admin
     {
       key: 'superAdmin',
-      email: 'superadmin@clubhub.dev',
+      email: 'admin@clubhub.app',
       name: 'Arjun Mehta',
       role: Role.super_admin,
       department: 'Administration',
@@ -177,7 +177,7 @@ async function seedUsers(): Promise<DbRecord> {
     // Club Admins (2)
     {
       key: 'clubAdminTech',
-      email: 'clubadmin.tech@clubhub.dev',
+      email: 'clubadmin1@clubhub.app',
       name: 'Priya Sharma',
       role: Role.club_admin,
       department: 'Computer Science',
@@ -188,7 +188,7 @@ async function seedUsers(): Promise<DbRecord> {
     },
     {
       key: 'clubAdminCulture',
-      email: 'clubadmin.culture@clubhub.dev',
+      email: 'clubadmin2@clubhub.app',
       name: 'Riya Patel',
       role: Role.club_admin,
       department: 'Arts & Humanities',
@@ -200,7 +200,7 @@ async function seedUsers(): Promise<DbRecord> {
     // Event Managers (2)
     {
       key: 'eventMgr1',
-      email: 'eventmgr1@clubhub.dev',
+      email: 'eventmanager1@clubhub.app',
       name: 'Karan Nair',
       role: Role.event_manager,
       department: 'Computer Science',
@@ -211,7 +211,7 @@ async function seedUsers(): Promise<DbRecord> {
     },
     {
       key: 'eventMgr2',
-      email: 'eventmgr2@clubhub.dev',
+      email: 'eventmanager2@clubhub.app',
       name: 'Sneha Rao',
       role: Role.event_manager,
       department: 'Business',
@@ -223,7 +223,7 @@ async function seedUsers(): Promise<DbRecord> {
     // Secretaries (2)
     {
       key: 'secretary1',
-      email: 'secretary1@clubhub.dev',
+      email: 'secretary1@clubhub.app',
       name: 'Aarav Joshi',
       role: Role.secretary,
       department: 'Mechanical Engineering',
@@ -234,7 +234,7 @@ async function seedUsers(): Promise<DbRecord> {
     },
     {
       key: 'secretary2',
-      email: 'secretary2@clubhub.dev',
+      email: 'secretary2@clubhub.app',
       name: 'Divya Menon',
       role: Role.secretary,
       department: 'Electronics',
@@ -246,7 +246,7 @@ async function seedUsers(): Promise<DbRecord> {
     // Members (3)
     {
       key: 'member1',
-      email: 'member1@clubhub.dev',
+      email: 'member1@clubhub.app',
       name: 'Rohan Verma',
       role: Role.member,
       department: 'Computer Science',
@@ -257,7 +257,7 @@ async function seedUsers(): Promise<DbRecord> {
     },
     {
       key: 'member2',
-      email: 'member2@clubhub.dev',
+      email: 'member2@clubhub.app',
       name: 'Ananya Singh',
       role: Role.member,
       department: 'Data Science',
@@ -268,7 +268,7 @@ async function seedUsers(): Promise<DbRecord> {
     },
     {
       key: 'member3',
-      email: 'member3@clubhub.dev',
+      email: 'member3@clubhub.app',
       name: 'Ishaan Gupta',
       role: Role.member,
       department: 'Computer Science',
@@ -280,7 +280,7 @@ async function seedUsers(): Promise<DbRecord> {
     // Students (5) — plain students, not yet core members
     {
       key: 'student1',
-      email: 'student1@clubhub.dev',
+      email: 'student1@clubhub.app',
       name: 'Tanvi Kapoor',
       role: Role.student,
       department: 'Computer Science',
@@ -291,7 +291,7 @@ async function seedUsers(): Promise<DbRecord> {
     },
     {
       key: 'student2',
-      email: 'student2@clubhub.dev',
+      email: 'student2@clubhub.app',
       name: 'Vikram Das',
       role: Role.student,
       department: 'Electrical Engineering',
@@ -302,7 +302,7 @@ async function seedUsers(): Promise<DbRecord> {
     },
     {
       key: 'student3',
-      email: 'student3@clubhub.dev',
+      email: 'student3@clubhub.app',
       name: 'Meera Iyer',
       role: Role.student,
       department: 'Business',
@@ -313,7 +313,7 @@ async function seedUsers(): Promise<DbRecord> {
     },
     {
       key: 'student4',
-      email: 'student4@clubhub.dev',
+      email: 'student4@clubhub.app',
       name: 'Aditya Kumar',
       role: Role.student,
       department: 'Mechanical Engineering',
@@ -324,7 +324,7 @@ async function seedUsers(): Promise<DbRecord> {
     },
     {
       key: 'student5',
-      email: 'student5@clubhub.dev',
+      email: 'student5@clubhub.app',
       name: 'Pooja Reddy',
       role: Role.student,
       department: 'Data Science',
