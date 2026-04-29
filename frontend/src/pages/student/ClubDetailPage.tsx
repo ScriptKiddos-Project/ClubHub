@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Users, Calendar, Globe, ExternalLink, Settings } from 'lucide-react';
 import { useClub } from '../../hooks/useClubs';
@@ -55,31 +55,33 @@ const ClubDetailPage: React.FC = () => {
 
   const { events, registerForEvent } = useEvents({ clubId: id, autoFetch: !!id });
 
-  const [isJoined, setIsJoined] = useState(club.isJoined ?? false);
+  // FIX: derive initial value from club directly; track optimistic toggle locally.
+  // No useEffect needed — initialising from the latest club value on each render
+  // would reset user's optimistic update, so we use a local override instead.
+  const [joinedOverride, setJoinedOverride] = useState<boolean | null>(null);
+  const isJoined = joinedOverride !== null ? joinedOverride : (club.isJoined ?? false);
+
   const [joining, setJoining] = useState(false);
   const [activeTab, setActiveTab] = useState<'about' | 'events' | 'members'>('about');
 
   const isManager = user?.role === 'secretary' || user?.role === 'event_manager' || user?.role === 'super_admin';
 
-  useEffect(() => {
-    setIsJoined(club.isJoined ?? false);
-  }, [club.isJoined]);
-
   const handleJoinLeave = async () => {
     setJoining(true);
+    // Optimistic update
+    setJoinedOverride(!isJoined);
     try {
       if (isJoined) {
         await clubService.leave(club.id);
-        setIsJoined(false);
         toast.success('Left club');
       } else {
         await clubService.join(club.id);
-        setIsJoined(true);
         toast.success(`🎉 Joined ${club.name}!`);
       }
     } catch {
-      setIsJoined(!isJoined);
-      toast.success(isJoined ? 'Left club' : `🎉 Joined ${club.name}!`);
+      // Revert optimistic update on failure
+      setJoinedOverride(isJoined);
+      toast.error('Action failed. Please try again.');
     } finally {
       setJoining(false);
     }

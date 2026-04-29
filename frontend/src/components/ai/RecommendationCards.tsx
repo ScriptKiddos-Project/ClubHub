@@ -2,21 +2,37 @@ import { Sparkles, RefreshCw, Calendar, MapPin } from 'lucide-react';
 import { useRecommendations } from '../../hooks/useRecommendations';
 import { format } from 'date-fns';
 
+interface RawEvent {
+  id: string;
+  title: string;
+  date?: string;
+  venue?: string;
+  reason?: string;
+  [key: string]: unknown;
+}
+
+interface NestedRecommendation {
+  event: RawEvent;
+  reason?: string;
+}
+
+type RawRecommendation = RawEvent | NestedRecommendation;
+
 // Normalizes both API shapes into { event, reason }:
 //   Shape A (flat):   { id, title, date, venue, reason?, ... }
 //   Shape B (nested): { event: { id, title, date, venue }, reason: string }
-function normalize(item: any): { event: any; reason: string } | null {
+function normalize(item: RawRecommendation): { event: RawEvent; reason: string } | null {
   if (!item) return null;
 
   // Shape B — already wrapped
-  if (item.event && typeof item.event === 'object') {
-    return { event: item.event, reason: item.reason ?? 'Recommended for you' };
+  if ('event' in item && item.event && typeof item.event === 'object') {
+    return { event: item.event as RawEvent, reason: (item as NestedRecommendation).reason ?? 'Recommended for you' };
   }
 
   // Shape A — flat event object
-  if (item.id && item.title) {
-    const { reason, ...event } = item;
-    return { event, reason: reason ?? 'Recommended for you' };
+  if ('id' in item && 'title' in item) {
+    const { reason, ...event } = item as RawEvent;
+    return { event: event as RawEvent, reason: reason ?? 'Recommended for you' };
   }
 
   return null;
@@ -44,7 +60,7 @@ export function RecommendationCards() {
   // Normalize + drop any items that couldn't be parsed
   const normalized = (recommendations ?? [])
     .map(normalize)
-    .filter((item): item is { event: any; reason: string } => item !== null);
+    .filter((item): item is { event: RawEvent; reason: string } => item !== null);
 
   if (normalized.length === 0) return null;
 

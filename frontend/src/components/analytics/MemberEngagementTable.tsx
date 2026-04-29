@@ -81,7 +81,7 @@ export function MemberEngagementTable({ clubId }: { clubId: string }) {
       .then((res) => setData(res.data.data))
       .finally(() => setIsLoading(false));
   }, [clubId]);
-
+  // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable({
     data,
     columns,

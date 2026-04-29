@@ -29,7 +29,7 @@ const EarnedBadgePill: React.FC<{ badge: EarnedBadge; onClick: () => void }> = (
       <span className="text-3xl group-hover:scale-110 transition-transform duration-200">
         {badge.icon}
       </span>
-      <span className="text-[11px] font-bold text-gray-700 text-center leading-tight max-w-[72px]">
+      <span className="text-[11px] font-bold text-gray-700 text-center leading-tight max-w-18">
         {badge.name}
       </span>
       <span className={cn(
@@ -52,7 +52,7 @@ const LockedBadgePill: React.FC<{ badge: LockedBadge; onClick: () => void }> = (
     className="flex flex-col items-center gap-1.5 p-3 rounded-2xl bg-gray-50 border border-gray-100 hover:border-gray-200 transition-all duration-200 cursor-pointer group relative"
   >
     <span className="text-3xl opacity-30 grayscale">{badge.icon}</span>
-    <span className="text-[11px] font-semibold text-gray-400 text-center leading-tight max-w-[72px]">
+    <span className="text-[11px] font-semibold text-gray-400 text-center leading-tight max-w-18">
       {badge.name}
     </span>
     {/* Progress bar */}

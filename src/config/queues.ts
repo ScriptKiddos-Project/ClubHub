@@ -49,6 +49,9 @@ export enum EmailJobType {
   WELCOME_EMAIL             = 'welcome_email',
   EVENT_CANCELLATION        = 'event_cancellation',
   CERTIFICATE               = 'certificate',   // Phase 3
+  APPLICATION_STATUS        = 'application_status',
+  INTERVIEW_SCHEDULED       = 'interview_scheduled',
+  INTERVIEW_RESULT          = 'interview_result',
 }
 
 export enum NotificationJobType {

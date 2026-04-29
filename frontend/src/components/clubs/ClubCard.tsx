@@ -32,7 +32,7 @@ interface ClubCardProps {
 export const ClubCard: React.FC<ClubCardProps> = ({ club, onJoin, onLeave }) => (
   <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-md transition-all duration-200 group">
     {/* Banner */}
-    <div className="relative h-28 bg-gradient-to-br from-indigo-500 to-purple-600 overflow-hidden">
+    <div className="relative h-28 bg-linear-to-br from-indigo-500 to-purple-600 overflow-hidden">
       {club.bannerUrl && (
         <img
           src={club.bannerUrl}
@@ -40,7 +40,7 @@ export const ClubCard: React.FC<ClubCardProps> = ({ club, onJoin, onLeave }) => 
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
         />
       )}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
+      <div className="absolute inset-0 bg-linear-to-t from-black/30 to-transparent" />
       <span
         className={cn(
           'absolute top-3 right-3 px-2.5 py-1 rounded-full text-xs font-semibold',

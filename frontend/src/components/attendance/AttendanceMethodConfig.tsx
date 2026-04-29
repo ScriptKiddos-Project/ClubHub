@@ -1,8 +1,5 @@
 // components/attendance/AttendanceMethodConfig.tsx
-// Admin (Secretary / Event Manager) panel to configure which attendance
-// methods are active for a specific event.
-
-import React, { useEffect, useState } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import { QrCode, MapPin, Hash, ClipboardList, Save, Loader2 } from 'lucide-react';
 import { cn } from '../../utils';
 import { useAttendanceMethodConfig } from '../../hooks/usePhase3';
@@ -20,9 +17,7 @@ interface ToggleRowProps {
 const ToggleRow: React.FC<ToggleRowProps> = ({ icon, label, description, checked, onChange, badge }) => (
   <label className={cn(
     'flex items-center gap-4 p-4 rounded-xl border cursor-pointer transition-all duration-150 select-none',
-    checked
-      ? 'border-indigo-200 bg-indigo-50'
-      : 'border-gray-100 bg-white hover:border-gray-200'
+    checked ? 'border-indigo-200 bg-indigo-50' : 'border-gray-100 bg-white hover:border-gray-200'
   )}>
     <div className={cn(
       'w-10 h-10 rounded-xl flex items-center justify-center shrink-0 text-lg',
@@ -41,7 +36,6 @@ const ToggleRow: React.FC<ToggleRowProps> = ({ icon, label, description, checked
       </div>
       <p className="text-xs text-gray-500 mt-0.5">{description}</p>
     </div>
-    {/* Toggle switch */}
     <div
       onClick={(e) => { e.preventDefault(); onChange(!checked); }}
       className={cn(
@@ -61,30 +55,49 @@ interface Props {
   eventId: string;
 }
 
+type LocalConfig = Omit<Config, 'eventId'>;
+
 const AttendanceMethodConfigPanel: React.FC<Props> = ({ eventId }) => {
   const { config, loading, saving, saveConfig } = useAttendanceMethodConfig(eventId);
-  const [local, setLocal] = useState<Omit<Config, 'eventId'> | null>(null);
 
-  useEffect(() => {
-    if (config) {
-      setLocal({
-        qrEnabled: config.qrEnabled,
-        geoEnabled: config.geoEnabled,
-        pinEnabled: config.pinEnabled,
-        manualEnabled: config.manualEnabled,
-      });
-    }
-  }, [config]);
-
-  const set = (key: keyof Omit<Config, 'eventId'>, val: boolean) =>
-    setLocal((prev) => prev ? { ...prev, [key]: val } : prev);
-
-  const isDirty = local && config && (
-    local.qrEnabled !== config.qrEnabled ||
-    local.geoEnabled !== config.geoEnabled ||
-    local.pinEnabled !== config.pinEnabled ||
-    local.manualEnabled !== config.manualEnabled
+  // Derive a baseline from config whenever it arrives, then allow local edits.
+  const baseline = useMemo<LocalConfig | null>(
+    () =>
+      config
+        ? {
+            qrEnabled: config.qrEnabled,
+            geoEnabled: config.geoEnabled,
+            pinEnabled: config.pinEnabled,
+            manualEnabled: config.manualEnabled,
+          }
+        : null,
+    [config]
   );
+
+  const [local, setLocal] = useState<LocalConfig | null>(baseline);
+
+  // Sync local draft when a fresh baseline arrives from the server (e.g. after
+  // a refetch). Done in the render phase via a ref comparison — this avoids
+  // the "setState synchronously within an effect" lint error while still
+  // ensuring the draft is updated before the next paint. Local edits are NOT
+  // overwritten mid-session because setLocal is only called when the baseline
+  // reference itself changes (i.e. new server data arrived).
+  const prevBaselineRef = useRef(baseline);
+  if (prevBaselineRef.current !== baseline) {
+    prevBaselineRef.current = baseline;
+    setLocal(baseline);
+  }
+
+  const set = (key: keyof LocalConfig, val: boolean) =>
+    setLocal((prev) => (prev ? { ...prev, [key]: val } : prev));
+
+  const isDirty =
+    local &&
+    config &&
+    (local.qrEnabled !== config.qrEnabled ||
+      local.geoEnabled !== config.geoEnabled ||
+      local.pinEnabled !== config.pinEnabled ||
+      local.manualEnabled !== config.manualEnabled);
 
   if (loading || !local) {
     return (

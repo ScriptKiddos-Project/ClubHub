@@ -3,7 +3,7 @@
 // Shows all announcements from clubs the student belongs to.
 
 import React, { useEffect, useState } from 'react';
-import { Megaphone, Pin, Loader2, Bell } from 'lucide-react';
+import { Megaphone, Pin, Bell } from 'lucide-react';
 import { cn } from '../../utils';
 import { Card, Skeleton } from '../../components/ui';
 import { fetchAnnouncements } from '../../services/phase4Service';
@@ -23,7 +23,7 @@ const AnnouncementCard: React.FC<{ ann: Announcement }> = ({ ann }) => (
 
     <div className="flex items-start gap-3">
       {/* Icon */}
-      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shrink-0 shadow-sm">
+      <div className="w-10 h-10 rounded-xl bg-linear-to-br from-indigo-500 to-purple-600 flex items-center justify-center shrink-0 shadow-sm">
         <Megaphone size={16} className="text-white" />
       </div>
 

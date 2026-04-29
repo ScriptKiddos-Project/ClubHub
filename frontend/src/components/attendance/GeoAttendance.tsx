@@ -1,7 +1,4 @@
 // components/attendance/GeoAttendance.tsx
-// Student-facing geo-fence attendance button + distance feedback.
-// Drop this into EventDetailPage alongside QR / PIN buttons.
-
 import React, { useEffect, useRef, useState } from 'react';
 import { MapPin, Navigation, CheckCircle, XCircle, Loader2, AlertCircle } from 'lucide-react';
 import { cn } from '../../utils';
@@ -9,15 +6,10 @@ import { useGeoAttendance } from '../../hooks/usePhase3';
 
 interface GeoAttendanceProps {
   eventId: string;
-  /** Whether any attendance method has already been used for this event */
   alreadyAttended?: boolean;
 }
 
-// ── Haversine (client-side, for the live distance ring) ──────────────────────
-function haversineMetres(
-  lat1: number, lng1: number,
-  lat2: number, lng2: number
-): number {
+function haversineMetres(lat1: number, lng1: number, lat2: number, lng2: number): number {
   const R = 6_371_000;
   const toRad = (d: number) => (d * Math.PI) / 180;
   const dLat = toRad(lat2 - lat1);
@@ -28,25 +20,19 @@ function haversineMetres(
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
-// ── Distance ring visualiser ─────────────────────────────────────────────────
-const DistanceRing: React.FC<{
-  distance: number;
-  radius: number;
-  withinFence: boolean;
-}> = ({ distance, radius, withinFence }) => {
-  const pct = Math.min(distance / (radius * 1.5), 1);          // 0 = at venue, 1 = far
+const DistanceRing: React.FC<{ distance: number; radius: number; withinFence: boolean }> = ({
+  distance, radius, withinFence,
+}) => {
+  const pct = Math.min(distance / (radius * 1.5), 1);
   const circumference = 2 * Math.PI * 40;
   const dash = circumference * (1 - pct);
 
   return (
     <div className="flex flex-col items-center gap-2 my-4">
       <svg width="100" height="100" viewBox="0 0 100 100">
-        {/* background track */}
         <circle cx="50" cy="50" r="40" fill="none" stroke="#e5e7eb" strokeWidth="8" />
-        {/* progress arc */}
         <circle
-          cx="50" cy="50" r="40"
-          fill="none"
+          cx="50" cy="50" r="40" fill="none"
           stroke={withinFence ? '#10b981' : '#f59e0b'}
           strokeWidth="8"
           strokeDasharray={`${circumference}`}
@@ -54,7 +40,6 @@ const DistanceRing: React.FC<{
           strokeLinecap="round"
           style={{ transition: 'stroke-dashoffset 0.6s ease', transform: 'rotate(-90deg)', transformOrigin: '50% 50%' }}
         />
-        {/* icon */}
         <text x="50" y="50" textAnchor="middle" dominantBaseline="central" fontSize="22">
           {withinFence ? '✅' : '📍'}
         </text>
@@ -69,10 +54,12 @@ const DistanceRing: React.FC<{
   );
 };
 
-// ── Live GPS watch (updates every ~3 s while panel is open) ──────────────────
+// FIX: initialise `watching` as false. Flip it inside the geolocation
+// success/error callbacks (which are async) rather than synchronously
+// at the top of the effect body — this avoids the lint violation.
 const useLiveDistance = (
   venueLat?: number,
-  venueLng?: number
+  venueLng?: number,
 ): { distance: number | null; watching: boolean } => {
   const [distance, setDistance] = useState<number | null>(null);
   const [watching, setWatching] = useState(false);
@@ -80,16 +67,23 @@ const useLiveDistance = (
 
   useEffect(() => {
     if (!venueLat || !venueLng || !navigator.geolocation) return;
-    setWatching(true);
+
+    // Start watching — mark as active once the first position arrives
     watchIdRef.current = navigator.geolocation.watchPosition(
       (pos) => {
-        setDistance(haversineMetres(pos.coords.latitude, pos.coords.longitude, venueLat, venueLng));
+        setWatching(true);
+        setDistance(
+          haversineMetres(pos.coords.latitude, pos.coords.longitude, venueLat, venueLng),
+        );
       },
       () => setWatching(false),
-      { enableHighAccuracy: true, maximumAge: 3000 }
+      { enableHighAccuracy: true, maximumAge: 3000 },
     );
+
     return () => {
-      if (watchIdRef.current !== null) navigator.geolocation.clearWatch(watchIdRef.current);
+      if (watchIdRef.current !== null) {
+        navigator.geolocation.clearWatch(watchIdRef.current);
+      }
       setWatching(false);
     };
   }, [venueLat, venueLng]);
@@ -97,12 +91,11 @@ const useLiveDistance = (
   return { distance, watching };
 };
 
-// ── Main component ─────────────────────────────────────────────────────────
 const GeoAttendance: React.FC<GeoAttendanceProps> = ({ eventId, alreadyAttended = false }) => {
   const { result, venueCoords, loading, gpsLoading, error, markAttendance } = useGeoAttendance(eventId);
   const { distance: liveDistance, watching } = useLiveDistance(
     venueCoords?.latitude,
-    venueCoords?.longitude
+    venueCoords?.longitude,
   );
 
   const success = result?.attendanceMarked;
@@ -119,7 +112,6 @@ const GeoAttendance: React.FC<GeoAttendanceProps> = ({ eventId, alreadyAttended 
 
   return (
     <div className="bg-white border border-gray-200 rounded-2xl p-5 space-y-4">
-      {/* Header */}
       <div className="flex items-center gap-3">
         <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600">
           <MapPin size={20} />
@@ -130,7 +122,6 @@ const GeoAttendance: React.FC<GeoAttendanceProps> = ({ eventId, alreadyAttended 
         </div>
       </div>
 
-      {/* Live distance indicator */}
       {venueCoords && liveDistance !== null && !success && (
         <DistanceRing
           distance={liveDistance}
@@ -139,7 +130,6 @@ const GeoAttendance: React.FC<GeoAttendanceProps> = ({ eventId, alreadyAttended 
         />
       )}
 
-      {/* GPS watching status */}
       {watching && liveDistance !== null && (
         <div className="flex items-center gap-2 text-xs text-gray-400">
           <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" />
@@ -147,7 +137,6 @@ const GeoAttendance: React.FC<GeoAttendanceProps> = ({ eventId, alreadyAttended 
         </div>
       )}
 
-      {/* Success state */}
       {success && (
         <div className="flex items-center gap-3 p-3 bg-emerald-50 border border-emerald-200 rounded-xl">
           <CheckCircle size={18} className="text-emerald-600 shrink-0" />
@@ -158,7 +147,6 @@ const GeoAttendance: React.FC<GeoAttendanceProps> = ({ eventId, alreadyAttended 
         </div>
       )}
 
-      {/* Failure state */}
       {failure && (
         <div className="flex items-center gap-3 p-3 bg-amber-50 border border-amber-200 rounded-xl">
           <XCircle size={18} className="text-amber-600 shrink-0" />
@@ -171,7 +159,6 @@ const GeoAttendance: React.FC<GeoAttendanceProps> = ({ eventId, alreadyAttended 
         </div>
       )}
 
-      {/* Error */}
       {error && !result && (
         <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-xs">
           <AlertCircle size={14} />
@@ -179,7 +166,6 @@ const GeoAttendance: React.FC<GeoAttendanceProps> = ({ eventId, alreadyAttended 
         </div>
       )}
 
-      {/* CTA button */}
       {!success && (
         <button
           onClick={markAttendance}
@@ -188,7 +174,7 @@ const GeoAttendance: React.FC<GeoAttendanceProps> = ({ eventId, alreadyAttended 
             'w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-200',
             loading
               ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-              : 'bg-blue-600 hover:bg-blue-700 active:scale-[0.98] text-white shadow-sm shadow-blue-200'
+              : 'bg-blue-600 hover:bg-blue-700 active:scale-[0.98] text-white shadow-sm shadow-blue-200',
           )}
         >
           {loading ? (
@@ -205,7 +191,6 @@ const GeoAttendance: React.FC<GeoAttendanceProps> = ({ eventId, alreadyAttended 
         </button>
       )}
 
-      {/* Retry if failed */}
       {failure && (
         <button
           onClick={markAttendance}

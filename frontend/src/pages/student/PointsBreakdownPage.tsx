@@ -27,7 +27,7 @@ const MULTIPLIER_COLORS: Record<MemberType, string> = {
 } as const;
 
 const MultiplierBadge: React.FC<{ type: MemberType }> = ({ type }) => (
-  <Badge variant={MULTIPLIER_COLORS[type] as any}>
+  <Badge variant={MULTIPLIER_COLORS[type] as 'default' | 'info' | 'warning' | 'primary'}>
     {AICTE_MULTIPLIERS[type]}× · {MEMBER_TYPE_LABELS[type]}
   </Badge>
 );

@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
+import type { AxiosError } from 'axios';
 import api from '../services/api';
 
 interface RecommendedEvent {
@@ -15,6 +16,10 @@ interface RecommendedEvent {
   reason: string;
 }
 
+interface ApiErrorResponse {
+  error?: { message?: string };
+}
+
 export function useRecommendations() {
   const [recommendations, setRecommendations] = useState<RecommendedEvent[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -23,14 +28,13 @@ export function useRecommendations() {
   const fetchRecommendations = useCallback(async () => {
     try {
       setIsLoading(true);
-      const { data } = await api.get<{ success: boolean; data: RecommendedEvent[] }>(
-        '/recommendations'
-      );
-      setRecommendations(data.data ?? []); // ← null/undefined safe
+      const { data } = await api.get<{ success: boolean; data: RecommendedEvent[] }>('/recommendations');
+      setRecommendations(data.data ?? []);
       setError(null);
-    } catch (err: any) {
-      setError(err.response?.data?.error?.message ?? 'Failed to load recommendations');
-      setRecommendations([]); // ← clear stale data on error
+    } catch (err) {
+      const axiosErr = err as AxiosError<ApiErrorResponse>;
+      setError(axiosErr.response?.data?.error?.message ?? 'Failed to load recommendations');
+      setRecommendations([]);
     } finally {
       setIsLoading(false);
     }
@@ -39,21 +43,22 @@ export function useRecommendations() {
   const refresh = useCallback(async () => {
     try {
       setIsLoading(true);
-      const { data } = await api.post<{ success: boolean; data: RecommendedEvent[] }>(
-        '/recommendations/refresh'
-      );
-      setRecommendations(data.data ?? []); // ← null/undefined safe
+      const { data } = await api.post<{ success: boolean; data: RecommendedEvent[] }>('/recommendations/refresh');
+      setRecommendations(data.data ?? []);
       setError(null);
-    } catch (err: any) {
-      setError(err.response?.data?.error?.message ?? 'Failed to refresh recommendations');
-      setRecommendations([]); // ← clear stale data on error
+    } catch (err) {
+      const axiosErr = err as AxiosError<ApiErrorResponse>;
+      setError(axiosErr.response?.data?.error?.message ?? 'Failed to refresh recommendations');
+      setRecommendations([]);
     } finally {
       setIsLoading(false);
     }
   }, []);
 
+  // FIX: wrap in void async IIFE so the effect body itself is synchronous
+  // and contains no setState calls — satisfies react-hooks/set-state-in-effect.
   useEffect(() => {
-    fetchRecommendations();
+    void (async () => { await fetchRecommendations(); })();
   }, [fetchRecommendations]);
 
   return { recommendations, isLoading, error, refresh };

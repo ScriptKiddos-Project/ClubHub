@@ -38,7 +38,7 @@ export function VirtualTable<TData extends object>({
 }: VirtualTableProps<TData>) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [domCount, setDomCount] = React.useState(0);
-
+  // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable<TData>({
     data,
     columns,

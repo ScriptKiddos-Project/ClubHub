@@ -308,7 +308,7 @@ const AttendancePage: React.FC = () => {
                 {/* QR Code image from server */}
                 <div>
                   <p className="text-xs font-semibold text-gray-500 uppercase mb-2">Event QR Code</p>
-                  <div className="flex flex-col items-center justify-center bg-gray-50 rounded-xl p-4 min-h-[180px]">
+                  <div className="flex flex-col items-center justify-center bg-gray-50 rounded-xl p-4 min-h-45">
                     {qrLoading && (
                       <div className="flex flex-col items-center gap-2 text-gray-400">
                         <Spinner size="md" />

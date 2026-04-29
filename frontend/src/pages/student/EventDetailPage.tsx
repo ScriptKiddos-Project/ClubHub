@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import {
   ArrowLeft, Calendar, Clock, MapPin, Users, Bookmark, Share2,
@@ -55,7 +55,11 @@ const EventDetailPage: React.FC = () => {
   const { event: fetchedEvent, loading } = useEvent(id ?? '');
   const event = fetchedEvent ?? MOCK_EVENT;
 
-  const [isRegistered, setIsRegistered] = useState(event.isRegistered ?? false);
+  // FIX: removed useEffect + setState mirroring event.isRegistered.
+  // Track optimistic toggle with a nullable override instead.
+  const [registeredOverride, setRegisteredOverride] = useState<boolean | null>(null);
+  const isRegistered = registeredOverride !== null ? registeredOverride : (event.isRegistered ?? false);
+
   const [registering, setRegistering] = useState(false);
   const [bookmarked, setBookmarked] = useState(false);
 
@@ -64,26 +68,21 @@ const EventDetailPage: React.FC = () => {
   const isFull = spots <= 0;
   const isOrganizer = user?.role === 'event_manager' || user?.role === 'secretary' || user?.role === 'super_admin';
 
-  useEffect(() => {
-    setIsRegistered(event.isRegistered ?? false);
-  }, [event.isRegistered]);
-
   const handleRegister = async () => {
     setRegistering(true);
+    setRegisteredOverride(!isRegistered);
     try {
       if (isRegistered) {
         await eventService.unregister(event.id);
-        setIsRegistered(false);
         toast.success('Unregistered from event');
       } else {
         await eventService.register(event.id);
-        setIsRegistered(true);
         toast.success(`🎉 Registered! You'll earn ${event.pointsReward} points for attending.`);
       }
     } catch {
-      // Mock success for demo
-      setIsRegistered(!isRegistered);
-      toast.success(isRegistered ? 'Unregistered' : '🎉 Registered successfully!');
+      // Revert optimistic update on failure
+      setRegisteredOverride(isRegistered);
+      toast.error('Action failed. Please try again.');
     } finally {
       setRegistering(false);
     }

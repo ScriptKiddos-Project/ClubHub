@@ -2,7 +2,8 @@
 // Phase 3 — Geo-fence attendance with AICTE multipliers
 
 import { PrismaClient, AttendanceMethod, AttendanceStatus, NotificationType } from '@prisma/client';
-import { isWithinGeoFence, getAICTEMultiplier } from '../utils/geoUtils';
+// import { isWithinGeoFence, getAICTEMultiplier } from '../utils/geoUtils';
+import { isWithinGeoFence, getAICTEMultiplier, haversineDistance } from '../utils/geoUtils';
 import { notificationQueue, NotificationJobType } from '../config/queues';
 import { certificateQueue } from '../config/queues';
 
@@ -32,12 +33,12 @@ export async function markGeoAttendance(
     );
   }
 
-  const distanceMetres = require('../utils/geoUtils').haversineDistance(
-    studentLat,
-    studentLon,
-    event.venue_lat,
-    event.venue_lng
-  ) as number;
+  const distanceMetres = haversineDistance(studentLat, studentLon, event.venue_lat, event.venue_lng) as number;
+  //   studentLat,
+  //   studentLon,
+  //   event.venue_lat,
+  //   event.venue_lng
+  // ) as number;
 
   if (!isWithinGeoFence(studentLat, studentLon, event.venue_lat, event.venue_lng, event.geo_fence_radius)) {
     throw Object.assign(

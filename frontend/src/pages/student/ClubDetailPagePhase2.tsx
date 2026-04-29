@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import React, { useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import {
   ArrowLeft, Users, Calendar, Globe, ExternalLink, TrendingUp,
-  MessageSquarePlus, Settings,
+  Settings,
 } from 'lucide-react';
 import { useClub } from '../../hooks/useClubs';
 import { useEvents } from '../../hooks/useEvents';
@@ -64,28 +64,28 @@ const ClubDetailPagePhase2: React.FC = () => {
   const { events, registerForEvent } = useEvents({ clubId: id, autoFetch: !!id });
   const { breakdown, history, loading: rankingLoading } = useClubRanking(id ?? '');
 
-  const [isJoined, setIsJoined] = useState(club.isJoined ?? false);
+  // FIX: removed useEffect + setState that mirrored club.isJoined.
+  // Track optimistic toggle with a nullable override instead.
+  const [joinedOverride, setJoinedOverride] = useState<boolean | null>(null);
+  const isJoined = joinedOverride !== null ? joinedOverride : (club.isJoined ?? false);
+
   const [joining, setJoining] = useState(false);
   const [activeTab, setActiveTab] = useState<TabKey>('about');
   const [showRankingModal, setShowRankingModal] = useState(false);
 
-  useEffect(() => {
-    setIsJoined(club.isJoined ?? false);
-  }, [club.isJoined]);
-
   const handleJoinLeave = async () => {
     setJoining(true);
+    setJoinedOverride(!isJoined);
     try {
       if (isJoined) {
         await clubService.leave(club.id);
-        setIsJoined(false);
         toast.success('Left club');
       } else {
         await clubService.join(club.id);
-        setIsJoined(true);
         toast.success('Joined club!');
       }
     } catch {
+      setJoinedOverride(isJoined);
       toast.error('Action failed');
     } finally {
       setJoining(false);
@@ -123,11 +123,11 @@ const ClubDetailPagePhase2: React.FC = () => {
       </button>
 
       {/* Hero banner */}
-      <div className="relative rounded-2xl overflow-hidden bg-gradient-to-br from-indigo-600 to-purple-700 h-40">
+      <div className="relative rounded-2xl overflow-hidden bg-linear-to-br from-indigo-600 to-purple-700 h-40">
         {club.bannerUrl && (
           <img src={club.bannerUrl} alt="" className="w-full h-full object-cover opacity-60" />
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+        <div className="absolute inset-0 bg-linear-to-t from-black/40 to-transparent" />
 
         {/* Category badge */}
         <span className={cn('absolute top-4 right-4 px-3 py-1 rounded-full text-xs font-bold', categoryColor(club.category))}>
@@ -157,7 +157,6 @@ const ClubDetailPagePhase2: React.FC = () => {
                     <Calendar size={13} /> {club.upcomingEventCount ?? 0} upcoming events
                   </span>
 
-                  {/* ── Phase 2: Ranking badge ── */}
                   {breakdown && (
                     <button
                       onClick={() => setShowRankingModal(true)}
@@ -170,7 +169,6 @@ const ClubDetailPagePhase2: React.FC = () => {
               </div>
 
               <div className="flex items-center gap-2">
-                {/* ── Phase 2: Ranking breakdown button ── */}
                 {breakdown && (
                   <button
                     onClick={() => setShowRankingModal(true)}
@@ -315,14 +313,12 @@ const ClubDetailPagePhase2: React.FC = () => {
         </Card>
       )}
 
-      {/* ── Phase 2: Suggestion Box tab ── */}
       {activeTab === 'suggestions' && (
         <Card>
           <SuggestionBox clubId={id ?? club.id} />
         </Card>
       )}
 
-      {/* Ranking breakdown modal */}
       <RankingBreakdownModal
         open={showRankingModal}
         onClose={() => setShowRankingModal(false)}

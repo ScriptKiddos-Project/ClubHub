@@ -89,7 +89,7 @@ export function CampusTrends() {
           </h3>
           {trends.mostPopularClub ? (
             <div className="flex flex-col items-center justify-center h-32 text-center gap-2">
-              <div className="h-14 w-14 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-white text-2xl font-bold">
+              <div className="h-14 w-14 rounded-full bg-linear-to-br from-amber-400 to-orange-500 flex items-center justify-center text-white text-2xl font-bold">
                 {trends.mostPopularClub.name[0]}
               </div>
               <p className="font-semibold">{trends.mostPopularClub.name}</p>
@@ -120,7 +120,7 @@ export function CampusTrends() {
               }`}>
                 #{performer.rank}
               </span>
-              <div className="h-7 w-7 rounded-full bg-gradient-to-br from-purple-400 to-cyan-500 flex items-center justify-center text-white text-xs font-bold shrink-0">
+              <div className="h-7 w-7 rounded-full bg-linear-to-br from-purple-400 to-cyan-500 flex items-center justify-center text-white text-xs font-bold shrink-0">
                 {performer.name[0]}
               </div>
               <div className="flex-1 min-w-0">

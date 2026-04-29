@@ -145,7 +145,7 @@ describe('Security Audit', () => {
   });
 
   it('rate limits repeated requests', () => {
-    const requests = Array.from({ length: 12 }, () =>
+    Array.from({ length: 12 }, () =>
       cy.request({
         method: 'POST',
         url: `${Cypress.env('apiUrl')}/api/v1/auth/login`,

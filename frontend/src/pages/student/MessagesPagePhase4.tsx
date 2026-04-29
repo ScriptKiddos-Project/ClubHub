@@ -5,7 +5,7 @@
 import React, { useState } from 'react';
 import { MessageSquare, Search, Users, Bell, Archive } from 'lucide-react';
 import { cn } from '../../utils';
-import { Avatar, Skeleton } from '../../components/ui';
+import { Skeleton } from '../../components/ui';
 import ChatWindow from '../../components/chat/ChatWindow';
 import { useChatRooms, useChatRoom } from '../../hooks/useChat';
 import type { ChatRoom } from '../../types/phase4';
@@ -41,7 +41,7 @@ const RoomItem: React.FC<{
           </div>
         )}
         {room.unreadCount > 0 && (
-          <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] rounded-full bg-indigo-600 text-white text-[10px] font-bold flex items-center justify-center px-1">
+          <span className="absolute -top-1 -right-1 min-w-4.5 h-4.5 rounded-full bg-indigo-600 text-white text-[10px] font-bold flex items-center justify-center px-1">
             {room.unreadCount > 99 ? '99+' : room.unreadCount}
           </span>
         )}

@@ -3,7 +3,7 @@ import * as recruitmentService from '../services/recruitmentService';
 
 export const applyToClub = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const userId = (req as any).user.userId; // JwtPayload uses userId
+    const userId = req.user!.id; // JwtPayload uses userId
     const application = await recruitmentService.submitApplication(
       req.params.clubId,
       userId,

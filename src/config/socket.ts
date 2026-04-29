@@ -1,6 +1,11 @@
 import { Server as HttpServer } from 'http';
 import { Server as SocketServer, Socket } from 'socket.io';
 import { verifyAccessToken } from '../utils/jwt';
+import type { JwtPayload } from '../types';
+
+interface AuthSocket extends Socket {
+  user: JwtPayload;
+}
 
 let io: SocketServer;
 
@@ -14,10 +19,10 @@ export const initSocket = (httpServer: HttpServer): SocketServer => {
 
   const authMiddleware = (socket: Socket, next: (err?: Error) => void) => {
     try {
-      const token = socket.handshake.auth?.token;
+      const token = socket.handshake.auth?.token as string | undefined;
       if (!token) return next(new Error('Unauthorized'));
-      const payload = verifyAccessToken(token); // throws on invalid — must be in try/catch
-      (socket as any).user = payload;
+      const payload = verifyAccessToken(token);
+      (socket as AuthSocket).user = payload;
       next();
     } catch {
       next(new Error('Invalid token'));
@@ -32,18 +37,14 @@ export const initSocket = (httpServer: HttpServer): SocketServer => {
   eventChat.use(authMiddleware);
   notifications.use(authMiddleware);
 
-  clubChat.on('connection', (socket) => {
-    socket.on('join_room', (clubId: string) => {
-      socket.join(`club:${clubId}`);
-    });
-    socket.on('leave_room', (clubId: string) => {
-      socket.leave(`club:${clubId}`);
-    });
+  clubChat.on('connection', (socket: Socket) => {
+    const authed = socket as AuthSocket;
+    socket.on('join_room', (clubId: string) => socket.join(`club:${clubId}`));
+    socket.on('leave_room', (clubId: string) => socket.leave(`club:${clubId}`));
     socket.on('send_message', (data: { clubId: string; content: string }) => {
-      const user = (socket as any).user;
       clubChat.to(`club:${data.clubId}`).emit('new_message', {
-        senderId: user.userId,   // payload uses userId, not id
-        senderName: user.name,
+        senderId: authed.user.userId,
+        senderName: authed.user.email, // JwtPayload has no name — use email
         content: data.content,
         timestamp: new Date().toISOString(),
         clubId: data.clubId,
@@ -51,18 +52,14 @@ export const initSocket = (httpServer: HttpServer): SocketServer => {
     });
   });
 
-  eventChat.on('connection', (socket) => {
-    socket.on('join_room', (eventId: string) => {
-      socket.join(`event:${eventId}`);
-    });
-    socket.on('leave_room', (eventId: string) => {
-      socket.leave(`event:${eventId}`);
-    });
+  eventChat.on('connection', (socket: Socket) => {
+    const authed = socket as AuthSocket;
+    socket.on('join_room', (eventId: string) => socket.join(`event:${eventId}`));
+    socket.on('leave_room', (eventId: string) => socket.leave(`event:${eventId}`));
     socket.on('send_message', (data: { eventId: string; content: string }) => {
-      const user = (socket as any).user;
       eventChat.to(`event:${data.eventId}`).emit('new_message', {
-        senderId: user.userId,   // payload uses userId, not id
-        senderName: user.name,
+        senderId: authed.user.userId,
+        senderName: authed.user.email,
         content: data.content,
         timestamp: new Date().toISOString(),
         eventId: data.eventId,
@@ -70,9 +67,9 @@ export const initSocket = (httpServer: HttpServer): SocketServer => {
     });
   });
 
-  notifications.on('connection', (socket) => {
-    const user = (socket as any).user;
-    socket.join(`user:${user.userId}`); // payload uses userId, not id
+  notifications.on('connection', (socket: Socket) => {
+    const authed = socket as AuthSocket;
+    socket.join(`user:${authed.user.userId}`);
   });
 
   return io;
@@ -83,7 +80,6 @@ export const getIO = (): SocketServer => {
   return io;
 };
 
-// userId matches JwtPayload.userId
 export const emitNotification = (userId: string, notification: object) => {
   getIO().of('/notifications').to(`user:${userId}`).emit('notification', notification);
 };

@@ -6,7 +6,7 @@ import { RankingBadge, RankTrend } from '../../components/rankings/RankingBadge'
 import { RankingBreakdownModal } from '../../components/rankings/RankingBreakdownModal';
 import { useClubRanking } from '../../hooks/usePhase2';
 import { cn, categoryColor } from '../../utils';
-import type { RankedClub, RankingTier } from '../../types/phase2';
+import type { RankedClub } from '../../types/phase2';
 
 const TIER_FILTERS: { value: string; label: string }[] = [
   { value: '', label: 'All Clubs' },
@@ -70,7 +70,7 @@ const Podium: React.FC<{ clubs: RankedClub[]; onBreakdown: (c: RankedClub) => vo
                 club.name[0]
               )}
             </div>
-            <p className="text-xs font-bold text-gray-800 text-center max-w-[80px] line-clamp-2">
+            <p className="text-xs font-bold text-gray-800 text-center max-w-20 line-clamp-2">
               {club.name}
             </p>
             <RankingBadge tier={club.tier} rank={club.rank} size="sm" />
@@ -137,7 +137,7 @@ const ClubRankingsPage: React.FC = () => {
 
       {/* Podium — top 3 */}
       {!loading && filtered.length >= 3 && !search && !tierFilter && (
-        <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl p-6 border border-indigo-100">
+        <div className="bg-linear-to-br from-indigo-50 to-purple-50 rounded-2xl p-6 border border-indigo-100">
           <h2 className="text-base font-bold text-gray-900 text-center mb-6">
             🏆 Top Performers
           </h2>

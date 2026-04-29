@@ -1,31 +1,15 @@
 // hooks/useRecruitment.ts
-// Data-fetching & mutation hooks for recruitment forms, applications,
-// and interview scheduling.
-
 import { useState, useEffect, useCallback } from 'react';
 import toast from 'react-hot-toast';
 import {
-  fetchRecruitmentForm,
-  submitApplication,
-  fetchApplications,
-  updateApplicationStatus,
-  scheduleInterview,
-  fetchInterviews,
-  recordInterviewResult,
-  fetchNotificationPreferences,
-  saveNotificationPreferences,
-  fetchAnnouncements,
-  postAnnouncement,
+  fetchRecruitmentForm, submitApplication, fetchApplications,
+  updateApplicationStatus, scheduleInterview, fetchInterviews,
+  recordInterviewResult, fetchNotificationPreferences, saveNotificationPreferences,
+  fetchAnnouncements, postAnnouncement,
 } from '../services/phase4Service';
 import type {
-  RecruitmentForm,
-  Application,
-  ApplicationPayload,
-  InterviewSlot,
-  ScheduleInterviewPayload,
-  InterviewResultPayload,
-  NotificationPreferences,
-  Announcement,
+  RecruitmentForm, Application, ApplicationPayload, InterviewSlot,
+  ScheduleInterviewPayload, InterviewResultPayload, NotificationPreferences, Announcement,
 } from '../types/phase4';
 
 // ─── useRecruitmentForm (student) ─────────────────────────────────────────────
@@ -77,7 +61,10 @@ export const useApplications = (clubId: string) => {
     }
   }, [clubId]);
 
-  useEffect(() => { load(); }, [load]);
+  // FIX: wrap in void async IIFE so no setState runs synchronously in the effect body.
+  useEffect(() => {
+    void (async () => { await load(); })();
+  }, [load]);
 
   const updateStatus = async (
     applicationId: string,
@@ -87,9 +74,7 @@ export const useApplications = (clubId: string) => {
     setUpdating(applicationId);
     try {
       const updated = await updateApplicationStatus(clubId, applicationId, status, notes);
-      setApplications((prev) =>
-        prev.map((a) => (a.id === applicationId ? updated : a))
-      );
+      setApplications((prev) => prev.map((a) => (a.id === applicationId ? updated : a)));
       toast.success(`Application ${status}.`);
     } catch {
       toast.error('Update failed.');
@@ -116,7 +101,10 @@ export const useInterviews = (clubId: string) => {
     finally { setLoading(false); }
   }, [clubId]);
 
-  useEffect(() => { load(); }, [load]);
+  // FIX: wrap in void async IIFE so no setState runs synchronously in the effect body.
+  useEffect(() => {
+    void (async () => { await load(); })();
+  }, [load]);
 
   const schedule = async (payload: ScheduleInterviewPayload): Promise<boolean> => {
     setScheduling(true);
@@ -140,9 +128,7 @@ export const useInterviews = (clubId: string) => {
     setRecording(interviewId);
     try {
       const updated = await recordInterviewResult(interviewId, payload);
-      setInterviews((prev) =>
-        prev.map((iv) => (iv.id === interviewId ? updated : iv))
-      );
+      setInterviews((prev) => prev.map((iv) => (iv.id === interviewId ? updated : iv)));
       const label = payload.result === 'accepted' ? 'accepted ✅' : 'rejected';
       toast.success(`Candidate ${label}. Notification email sent.`);
       return true;

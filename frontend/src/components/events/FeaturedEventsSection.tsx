@@ -15,7 +15,7 @@ const FeaturedEventCard: React.FC<{ event: FeaturedEvent }> = ({ event }) => {
       className="group relative bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5 flex flex-col"
     >
       {/* Hero */}
-      <div className="relative h-44 bg-gradient-to-br from-indigo-900 to-purple-900 overflow-hidden shrink-0">
+      <div className="relative h-44 bg-linear-to-br from-indigo-900 to-purple-900 overflow-hidden shrink-0">
         {event.heroImageUrl && (
           <img
             src={event.heroImageUrl}

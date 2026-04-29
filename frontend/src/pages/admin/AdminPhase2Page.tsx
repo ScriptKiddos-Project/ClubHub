@@ -1,13 +1,11 @@
 import React, { useState } from 'react';
-import {
-  Trophy, RefreshCw, BarChart2, CheckCircle2, Clock, XCircle,
-  AlertTriangle, Users,
-} from 'lucide-react';
+import { Trophy, RefreshCw, BarChart2, CheckCircle2, AlertTriangle, Users } from 'lucide-react';
 import { useLeaderboard } from '../../hooks/usePhase2';
 import { RankingBadge } from '../../components/rankings/RankingBadge';
 import { cn } from '../../utils';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
+import type { RankedClub } from '../../types/phase2';
 
 // ─── Manual ranking trigger ───────────────────────────────────────────────────
 const ManualRankingTrigger: React.FC = () => {
@@ -37,8 +35,7 @@ const ManualRankingTrigger: React.FC = () => {
             Ranking Engine
           </h3>
           <p className="text-xs text-gray-500 mt-1">
-            Rankings run automatically every night at 00:05.
-            You can also trigger a manual recalculation here.
+            Rankings run automatically every night at 00:05. You can also trigger a manual recalculation here.
           </p>
           {lastRun && (
             <p className="text-xs text-green-600 mt-1.5 flex items-center gap-1">
@@ -51,9 +48,7 @@ const ManualRankingTrigger: React.FC = () => {
           disabled={running}
           className={cn(
             'flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all shrink-0',
-            running
-              ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-              : 'bg-indigo-600 text-white hover:bg-indigo-700',
+            running ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-indigo-600 text-white hover:bg-indigo-700',
           )}
         >
           <RefreshCw size={14} className={running ? 'animate-spin' : ''} />
@@ -65,9 +60,7 @@ const ManualRankingTrigger: React.FC = () => {
 };
 
 // ─── Tier distribution summary ────────────────────────────────────────────────
-const TierDistribution: React.FC<{ clubs: ReturnType<typeof useLeaderboard>['clubs'] }> = ({
-  clubs,
-}) => {
+const TierDistribution: React.FC<{ clubs: RankedClub[] }> = ({ clubs }) => {
   const counts = {
     gold:     clubs.filter((c) => c.tier === 'gold').length,
     silver:   clubs.filter((c) => c.tier === 'silver').length,
@@ -79,10 +72,10 @@ const TierDistribution: React.FC<{ clubs: ReturnType<typeof useLeaderboard>['clu
     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
       {(
         [
-          { tier: 'gold',     label: '🥇 Gold',     count: counts.gold,     bg: 'bg-yellow-50 border-yellow-200' },
-          { tier: 'silver',   label: '🥈 Silver',   count: counts.silver,   bg: 'bg-gray-50  border-gray-200'   },
-          { tier: 'bronze',   label: '🥉 Bronze',   count: counts.bronze,   bg: 'bg-orange-50 border-orange-200' },
-          { tier: 'unranked', label: '— Unranked',  count: counts.unranked, bg: 'bg-gray-50  border-gray-100'   },
+          { label: '🥇 Gold',    count: counts.gold,     bg: 'bg-yellow-50 border-yellow-200' },
+          { label: '🥈 Silver',  count: counts.silver,   bg: 'bg-gray-50  border-gray-200'   },
+          { label: '🥉 Bronze',  count: counts.bronze,   bg: 'bg-orange-50 border-orange-200' },
+          { label: '— Unranked', count: counts.unranked, bg: 'bg-gray-50  border-gray-100'   },
         ] as const
       ).map(({ label, count, bg }) => (
         <div key={label} className={cn('rounded-xl border p-4 text-center', bg)}>
@@ -100,7 +93,6 @@ const AdminPhase2Page: React.FC = () => {
 
   return (
     <div className="p-6 max-w-5xl mx-auto space-y-6">
-      {/* Header */}
       <div className="flex items-center gap-3">
         <div className="w-10 h-10 rounded-xl bg-indigo-100 flex items-center justify-center">
           <Trophy size={20} className="text-indigo-600" />
@@ -111,10 +103,8 @@ const AdminPhase2Page: React.FC = () => {
         </div>
       </div>
 
-      {/* Ranking engine card */}
       <ManualRankingTrigger />
 
-      {/* Tier distribution */}
       {!loading && clubs.length > 0 && (
         <div className="space-y-3">
           <h2 className="text-base font-bold text-gray-900 flex items-center gap-2">
@@ -125,7 +115,6 @@ const AdminPhase2Page: React.FC = () => {
         </div>
       )}
 
-      {/* Leaderboard table */}
       <div className="space-y-3">
         <h2 className="text-base font-bold text-gray-900 flex items-center gap-2">
           <BarChart2 size={16} className="text-indigo-500" />
@@ -143,21 +132,9 @@ const AdminPhase2Page: React.FC = () => {
             <table className="w-full text-sm">
               <thead className="bg-gray-50 border-b border-gray-100">
                 <tr>
-                  <th className="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                    Rank
-                  </th>
-                  <th className="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                    Club
-                  </th>
-                  <th className="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider hidden sm:table-cell">
-                    Members
-                  </th>
-                  <th className="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                    Score
-                  </th>
-                  <th className="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                    Tier
-                  </th>
+                  {['Rank', 'Club', 'Members', 'Score', 'Tier'].map((h) => (
+                    <th key={h} className={`text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider${h === 'Members' ? ' hidden sm:table-cell' : ''}`}>{h}</th>
+                  ))}
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
@@ -171,19 +148,15 @@ const AdminPhase2Page: React.FC = () => {
                             ? <img src={club.logoUrl} alt="" className="w-full h-full object-cover" />
                             : club.name[0]}
                         </div>
-                        <span className="font-semibold text-gray-800 truncate max-w-[160px]">
-                          {club.name}
-                        </span>
+                        {/* FIX: use max-w-40 (Tailwind canonical) instead of max-w-[160px] */}
+                        <span className="font-semibold text-gray-800 truncate max-w-40">{club.name}</span>
                       </div>
                     </td>
-                    <td className="px-5 py-3 text-gray-500 hidden sm:table-cell">
-                      {club.memberCount}
-                    </td>
-                    <td className="px-5 py-3 font-bold text-indigo-600 tabular-nums">
-                      {club.rankingScore.toFixed(1)}
-                    </td>
+                    <td className="px-5 py-3 text-gray-500 hidden sm:table-cell">{club.memberCount}</td>
+                    <td className="px-5 py-3 font-bold text-indigo-600 tabular-nums">{club.rankingScore.toFixed(1)}</td>
                     <td className="px-5 py-3">
-                      <RankingBadge tier={club.tier as any} size="sm" />
+                      {/* FIX: club.tier is already typed as RankedClub['tier'] — no cast needed */}
+                      <RankingBadge tier={club.tier} size="sm" />
                     </td>
                   </tr>
                 ))}
@@ -193,7 +166,6 @@ const AdminPhase2Page: React.FC = () => {
         )}
       </div>
 
-      {/* Scoring methodology */}
       <div className="bg-indigo-50 border border-indigo-100 rounded-2xl p-5">
         <h3 className="text-sm font-bold text-indigo-800 mb-3 flex items-center gap-2">
           <AlertTriangle size={14} /> Scoring Weights Reference

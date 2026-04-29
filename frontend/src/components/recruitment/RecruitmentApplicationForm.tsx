@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import type { AxiosError } from 'axios';
 import api from '../../services/api';
 
 interface Field {
@@ -9,13 +10,16 @@ interface Field {
   required?: boolean;
 }
 
-// Default fields — in production these come from club config
 const DEFAULT_FIELDS: Field[] = [
   { key: 'why_join', label: 'Why do you want to join this club?', type: 'textarea', required: true },
   { key: 'relevant_skills', label: 'Relevant skills or experience', type: 'textarea', required: true },
   { key: 'availability', label: 'Availability (hours per week)', type: 'select', options: ['1-3', '4-6', '7-10', '10+'], required: true },
   { key: 'portfolio_link', label: 'Portfolio / LinkedIn (optional)', type: 'text' },
 ];
+
+interface ApiErrorResponse {
+  error?: { message?: string };
+}
 
 export const RecruitmentApplicationForm = ({
   clubId,
@@ -36,9 +40,7 @@ export const RecruitmentApplicationForm = ({
   };
 
   const handleSubmit = async () => {
-    const missing = DEFAULT_FIELDS.filter(
-      (f) => f.required && !formData[f.key]?.trim()
-    );
+    const missing = DEFAULT_FIELDS.filter((f) => f.required && !formData[f.key]?.trim());
     if (missing.length > 0) {
       setError(`Please fill in: ${missing.map((f) => f.label).join(', ')}`);
       return;
@@ -50,8 +52,9 @@ export const RecruitmentApplicationForm = ({
       await api.post(`/clubs/${clubId}/applications`, { formData });
       setSubmitted(true);
       onSuccess?.();
-    } catch (err: any) {
-      setError(err.response?.data?.error?.message || 'Submission failed. Try again.');
+    } catch (err) {
+      const axiosErr = err as AxiosError<ApiErrorResponse>;
+      setError(axiosErr.response?.data?.error?.message ?? 'Submission failed. Try again.');
     } finally {
       setSubmitting(false);
     }

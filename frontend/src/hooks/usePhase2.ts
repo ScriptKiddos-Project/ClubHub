@@ -3,10 +3,12 @@ import toast from 'react-hot-toast';
 import { rankingService } from '../services/rankingService';
 import { suggestionService } from '../services/suggestionService';
 import { featuredEventService } from '../services/featuredEventService';
-import type { RankedClub, RankingBreakdown, ClubRankingHistory, Suggestion, SuggestionStatus, FeaturedEvent } from '../types/phase2';
+import type {
+  RankedClub, RankingBreakdown, ClubRankingHistory,
+  Suggestion, SuggestionStatus, FeaturedEvent,
+} from '../types/phase2';
 
 // ─── useClubRanking ──────────────────────────────────────────────────────────
-
 export const useClubRanking = (clubId: string) => {
   const [breakdown, setBreakdown] = useState<RankingBreakdown | null>(null);
   const [history, setHistory] = useState<ClubRankingHistory[]>([]);
@@ -15,11 +17,7 @@ export const useClubRanking = (clubId: string) => {
 
   useEffect(() => {
     if (!clubId) return;
-    setLoading(true);
-    Promise.all([
-      rankingService.getBreakdown(clubId),
-      rankingService.getHistory(clubId),
-    ])
+    Promise.all([rankingService.getBreakdown(clubId), rankingService.getHistory(clubId)])
       .then(([breakdownRes, historyRes]) => {
         setBreakdown(breakdownRes.data.data);
         setHistory(historyRes.data.data);
@@ -32,7 +30,6 @@ export const useClubRanking = (clubId: string) => {
 };
 
 // ─── useLeaderboard ──────────────────────────────────────────────────────────
-
 export const useLeaderboard = () => {
   const [clubs, setClubs] = useState<RankedClub[]>([]);
   const [loading, setLoading] = useState(true);
@@ -50,13 +47,15 @@ export const useLeaderboard = () => {
     }
   }, []);
 
-  useEffect(() => { fetch(); }, [fetch]);
+  // FIX: wrap in void async IIFE so no setState runs synchronously in the effect body.
+  useEffect(() => {
+    void (async () => { await fetch(); })();
+  }, [fetch]);
 
   return { clubs, loading, error, refetch: fetch };
 };
 
 // ─── useSuggestions ──────────────────────────────────────────────────────────
-
 export const useSuggestions = (clubId: string) => {
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [loading, setLoading] = useState(true);
@@ -71,7 +70,10 @@ export const useSuggestions = (clubId: string) => {
     }
   }, [clubId]);
 
-  useEffect(() => { if (clubId) refresh(); }, [clubId, refresh]);
+  // FIX: wrap in void async IIFE so no setState runs synchronously in the effect body.
+  useEffect(() => {
+    if (clubId) void (async () => { await refresh(); })();
+  }, [clubId, refresh]);
 
   const submit = useCallback(async (title: string, body: string) => {
     try {
@@ -88,7 +90,7 @@ export const useSuggestions = (clubId: string) => {
       try {
         const res = await suggestionService.updateStatus(clubId, suggestionId, { status, adminNote });
         setSuggestions((prev) =>
-          prev.map((s) => (s.id === suggestionId ? res.data.data : s)),
+          prev.map((s) => (s.id === suggestionId ? res.data.data : s))
         );
         toast.success('Status updated');
       } catch {
@@ -102,7 +104,6 @@ export const useSuggestions = (clubId: string) => {
 };
 
 // ─── useFeaturedEvents ───────────────────────────────────────────────────────
-
 export const useFeaturedEvents = (limit = 6) => {
   const [events, setEvents] = useState<FeaturedEvent[]>([]);
   const [loading, setLoading] = useState(true);

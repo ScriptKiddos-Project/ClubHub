@@ -2,7 +2,7 @@
 // Lists all earned certificates with download + share options.
 
 import React, { useState } from 'react';
-import { Award, Download, Share2, ExternalLink, Loader2, FileText } from 'lucide-react';
+import { Award, Download, Share2, Loader2, FileText } from 'lucide-react';
 import { cn } from '../../utils';
 import { downloadCertificate } from '../../services/phase3Service';
 import type { Certificate } from '../../types/phase3';
@@ -44,7 +44,7 @@ const CertCard: React.FC<{ cert: Certificate }> = ({ cert }) => {
     <div className="group bg-white border border-gray-100 rounded-2xl p-5 hover:shadow-md hover:border-indigo-100 transition-all duration-200">
       <div className="flex items-start gap-4">
         {/* Icon */}
-        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shrink-0 shadow-sm shadow-indigo-200">
+        <div className="w-12 h-12 rounded-xl bg-linear-to-br from-indigo-500 to-purple-600 flex items-center justify-center shrink-0 shadow-sm shadow-indigo-200">
           <Award size={22} className="text-white" />
         </div>
 

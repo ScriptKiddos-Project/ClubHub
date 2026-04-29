@@ -21,6 +21,8 @@ const priorityColors: Record<string, string> = {
 export const NotificationBell = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [open, setOpen] = useState(false);
+  // useSocket returns a ref — we read .current only inside effects/handlers,
+  // never during render, and we depend on the ref object (not .current).
   const socketRef = useSocket('/notifications');
 
   const unreadCount = notifications.filter((n) => !n.isRead).length;
@@ -30,14 +32,15 @@ export const NotificationBell = () => {
   }, []);
 
   useEffect(() => {
+    // Read .current inside the effect body — safe because effects run after render.
     const socket = socketRef.current;
     if (!socket) return;
 
-    socket.on('notification', (notif: Notification) => {
+    const onNotification = (notif: Notification) => {
       setNotifications((prev) => [notif, ...prev]);
-    });
+    };
 
-    socket.on('announcement', (data: { title: string; body: string }) => {
+    const onAnnouncement = (data: { title: string; body: string }) => {
       const syntheticNotif: Notification = {
         id: Date.now().toString(),
         title: `📢 ${data.title}`,
@@ -47,13 +50,17 @@ export const NotificationBell = () => {
         createdAt: new Date().toISOString(),
       };
       setNotifications((prev) => [syntheticNotif, ...prev]);
-    });
+    };
+
+    socket.on('notification', onNotification);
+    socket.on('announcement', onAnnouncement);
 
     return () => {
-      socket.off('notification');
-      socket.off('announcement');
+      socket.off('notification', onNotification);
+      socket.off('announcement', onAnnouncement);
     };
-  }, [socketRef.current]);
+    // Depend on the ref object, not .current — the ref itself is stable.
+  }, [socketRef]);
 
   const markRead = async (id: string) => {
     await api.put(`/notifications/${id}/read`);
@@ -89,15 +96,11 @@ export const NotificationBell = () => {
           <div className="flex items-center justify-between px-4 py-3 border-b">
             <h4 className="font-semibold text-sm text-gray-800">Notifications</h4>
             {unreadCount > 0 && (
-              <button
-                onClick={markAllRead}
-                className="text-xs text-blue-600 hover:underline"
-              >
+              <button onClick={markAllRead} className="text-xs text-blue-600 hover:underline">
                 Mark all read
               </button>
             )}
           </div>
-
           <div className="max-h-96 overflow-y-auto divide-y">
             {notifications.length === 0 ? (
               <p className="text-center text-gray-400 text-sm py-8">No notifications</p>
@@ -106,15 +109,11 @@ export const NotificationBell = () => {
                 <div
                   key={notif.id}
                   onClick={() => markRead(notif.id)}
-                  className={`px-4 py-3 cursor-pointer hover:bg-gray-50 ${
-                    !notif.isRead ? 'bg-blue-50' : ''
-                  } ${priorityColors[notif.type] || ''}`}
+                  className={`px-4 py-3 cursor-pointer hover:bg-gray-50 ${!notif.isRead ? 'bg-blue-50' : ''} ${priorityColors[notif.type] || ''}`}
                 >
                   <p className="text-sm font-medium text-gray-800">{notif.title}</p>
                   <p className="text-xs text-gray-500 mt-0.5 line-clamp-2">{notif.body}</p>
-                  <p className="text-xs text-gray-400 mt-1">
-                    {new Date(notif.createdAt).toLocaleString()}
-                  </p>
+                  <p className="text-xs text-gray-400 mt-1">{new Date(notif.createdAt).toLocaleString()}</p>
                 </div>
               ))
             )}

@@ -1,29 +1,17 @@
 // hooks/usePhase3.ts
-// Data-fetching hooks for all Phase 3 features.
-
 import { useState, useEffect, useCallback } from 'react';
 import toast from 'react-hot-toast';
 import {
-  fetchPointsHistory,
-  fetchAchievements,
-  fetchCertificates,
-  requestResumeExport,
-  submitGeoAttendance,
-  fetchEventVenueCoords,
-  fetchAttendanceMethodConfig,
-  updateAttendanceMethodConfig,
+  fetchPointsHistory, fetchAchievements, fetchCertificates,
+  requestResumeExport, submitGeoAttendance, fetchEventVenueCoords,
+  fetchAttendanceMethodConfig, updateAttendanceMethodConfig,
 } from '../services/phase3Service';
 import type {
-  PointsHistoryResponse,
-  AchievementsResponse,
-  CertificatesResponse,
-  GeoAttendanceResult,
-  AttendanceMethodConfig,
-  EventVenueCoords,
+  PointsHistoryResponse, AchievementsResponse, CertificatesResponse,
+  GeoAttendanceResult, AttendanceMethodConfig, EventVenueCoords,
 } from '../types/phase3';
 
 // ─── usePointsHistory ─────────────────────────────────────────────────────────
-
 export const usePointsHistory = (initialPage = 1) => {
   const [data, setData] = useState<PointsHistoryResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -43,13 +31,15 @@ export const usePointsHistory = (initialPage = 1) => {
     }
   }, []);
 
-  useEffect(() => { load(page); }, [page, load]);
+  // FIX: wrap in void async IIFE so no setState runs synchronously in the effect body.
+  useEffect(() => {
+    void (async () => { await load(page); })();
+  }, [page, load]);
 
   return { data, loading, error, page, setPage, refetch: () => load(page) };
 };
 
 // ─── useAchievements ──────────────────────────────────────────────────────────
-
 export const useAchievements = () => {
   const [data, setData] = useState<AchievementsResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -71,7 +61,6 @@ export const useAchievements = () => {
 };
 
 // ─── useCertificates ──────────────────────────────────────────────────────────
-
 export const useCertificates = () => {
   const [data, setData] = useState<CertificatesResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -92,7 +81,6 @@ export const useCertificates = () => {
 };
 
 // ─── useResumeExport ──────────────────────────────────────────────────────────
-
 export const useResumeExport = () => {
   const [loading, setLoading] = useState(false);
 
@@ -117,7 +105,6 @@ export const useResumeExport = () => {
 };
 
 // ─── useGeoAttendance ─────────────────────────────────────────────────────────
-
 export const useGeoAttendance = (eventId: string) => {
   const [result, setResult] = useState<GeoAttendanceResult | null>(null);
   const [venueCoords, setVenueCoords] = useState<EventVenueCoords | null>(null);
@@ -130,7 +117,7 @@ export const useGeoAttendance = (eventId: string) => {
     if (!eventId) return;
     fetchEventVenueCoords(eventId)
       .then(setVenueCoords)
-      .catch(() => {/* venue coords optional */});
+      .catch(() => { /* venue coords optional */ });
   }, [eventId]);
 
   const requestGPS = useCallback((): Promise<GeolocationPosition> =>
@@ -140,9 +127,7 @@ export const useGeoAttendance = (eventId: string) => {
         return;
       }
       navigator.geolocation.getCurrentPosition(resolve, reject, {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 0,
+        enableHighAccuracy: true, timeout: 10000, maximumAge: 0,
       });
     }), []);
 
@@ -180,7 +165,6 @@ export const useGeoAttendance = (eventId: string) => {
 };
 
 // ─── useAttendanceMethodConfig ────────────────────────────────────────────────
-
 export const useAttendanceMethodConfig = (eventId: string) => {
   const [config, setConfig] = useState<AttendanceMethodConfig | null>(null);
   const [loading, setLoading] = useState(true);
@@ -190,7 +174,7 @@ export const useAttendanceMethodConfig = (eventId: string) => {
     if (!eventId) return;
     fetchAttendanceMethodConfig(eventId)
       .then(setConfig)
-      .catch(() => {/* optional — admin only */})
+      .catch(() => { /* optional — admin only */ })
       .finally(() => setLoading(false));
   }, [eventId]);
 

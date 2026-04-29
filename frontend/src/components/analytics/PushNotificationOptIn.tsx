@@ -1,28 +1,30 @@
-import { useState, useEffect } from 'react';
-import { Bell, BellOff, X } from 'lucide-react';
+import { useState } from 'react';
+import { Bell, X } from 'lucide-react';
 import api from '../../services/api';
 
 const VAPID_PUBLIC_KEY = import.meta.env.VITE_VAPID_PUBLIC_KEY;
 
-function urlBase64ToUint8Array(base64String: string): Uint8Array {
+function urlBase64ToUint8Array(base64String: string): ArrayBuffer {
   const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
   const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
   const rawData = atob(base64);
-  return Uint8Array.from([...rawData].map((char) => char.charCodeAt(0)));
+  const outputArray = new Uint8Array(rawData.length);
+  for (let i = 0; i < rawData.length; i++) {
+    outputArray[i] = rawData.charCodeAt(i);
+  }
+  return outputArray.buffer;
 }
 
 export function PushNotificationOptIn() {
-  const [permission, setPermission] = useState<NotificationPermission>('default');
+  // Lazy initialisers read browser APIs once on mount — no effect needed,
+  // which avoids the "setState synchronously within an effect" lint error.
+  const [permission, setPermission] = useState<NotificationPermission>(
+    () => ('Notification' in window ? Notification.permission : 'default')
+  );
   const [isSubscribing, setIsSubscribing] = useState(false);
-  const [isDismissed, setIsDismissed] = useState(false);
-
-  useEffect(() => {
-    if ('Notification' in window) {
-      setPermission(Notification.permission);
-    }
-    const dismissed = localStorage.getItem('push_opt_in_dismissed');
-    if (dismissed) setIsDismissed(true);
-  }, []);
+  const [isDismissed, setIsDismissed] = useState(
+    () => !!localStorage.getItem('push_opt_in_dismissed')
+  );
 
   const subscribe = async () => {
     if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
@@ -39,7 +41,6 @@ export function PushNotificationOptIn() {
         applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
       });
 
-      // Send subscription to backend
       await api.post('/notifications/push-subscribe', {
         subscription: JSON.stringify(subscription),
       });
@@ -60,7 +61,6 @@ export function PushNotificationOptIn() {
     setIsDismissed(true);
   };
 
-  // Don't show if already granted, denied, or dismissed
   if (isDismissed || permission === 'granted' || permission === 'denied') {
     return null;
   }

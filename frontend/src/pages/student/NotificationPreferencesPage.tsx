@@ -3,7 +3,7 @@
 // Students opt in/out of email, push, and in-app notifications per type.
 
 import React, { useEffect, useState } from 'react';
-import { Bell, Mail, Smartphone, MessageSquare, Save, Loader2, CheckCircle } from 'lucide-react';
+import { Mail, Smartphone, MessageSquare, Save, Loader2, CheckCircle } from 'lucide-react';
 import { cn } from '../../utils';
 import { Card } from '../../components/ui';
 import { fetchNotificationPreferences, saveNotificationPreferences } from '../../services/phase4Service';

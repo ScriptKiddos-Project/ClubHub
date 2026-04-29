@@ -146,10 +146,12 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
   onSend,
   onTyping,
 }) => {
+  'use no memo';
   const parentRef = useRef<HTMLDivElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   // Virtual list
+  // eslint-disable-next-line react-hooks/incompatible-library
   const rowVirtualizer = useVirtualizer({
     count: messages.length,
     getScrollElement: () => parentRef.current,

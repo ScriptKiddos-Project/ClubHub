@@ -1,6 +1,7 @@
 import prisma from '../config/database';
 import { emailQueue, EmailJobType } from '../config/queues'; // matches existing import pattern
 import { generateICSFile } from '../utils/icsGenerator';
+import { Prisma } from '@prisma/client';
 
 export const submitApplication = async (
   clubId: string,
@@ -13,7 +14,7 @@ export const submitApplication = async (
   if (existing) throw new Error('Already applied to this club');
 
   return prisma.recruitmentApplication.create({
-    data: { club_id: clubId, user_id: userId, form_data: formData },
+    data: { club_id: clubId, user_id: userId, form_data: formData as Prisma.InputJsonValue},
     include: { applicant: { select: { id: true, name: true, email: true } } },
   });
 };

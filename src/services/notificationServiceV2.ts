@@ -1,7 +1,7 @@
 import prisma from '../config/database';
 import { emailQueue, EmailJobType } from '../config/queues'; // matches existing pattern
 import { emitNotification } from '../config/socket';
-import { NotificationType } from '@prisma/client';
+import { NotificationType, Prisma } from '@prisma/client';
 
 type Priority = 'critical' | 'standard' | 'low';
 
@@ -30,7 +30,7 @@ export const sendNotification = async (payload: NotificationPayload) => {
       title: payload.title,
       body: payload.body,
       type: payload.type,
-      metadata: payload.metadata ?? {},
+      metadata: (payload.metadata ?? {}) as Prisma.InputJsonValue,
     },
   });
 

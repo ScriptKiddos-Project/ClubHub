@@ -24,7 +24,7 @@ export const getEventMessages = async (req: Request, res: Response, next: NextFu
 export const postAnnouncement = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { title, body } = req.body;
-    const userId = (req as any).user.userId; // JwtPayload uses userId
+    const userId = req.user!.id;// JwtPayload uses userId
     const announcement = await chatService.broadcastAnnouncement(
       req.params.clubId,
       userId,
