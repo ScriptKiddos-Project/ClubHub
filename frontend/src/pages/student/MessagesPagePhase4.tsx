@@ -81,7 +81,7 @@ const RoomItem: React.FC<{
 
 // ── Main page ─────────────────────────────────────────────────────────────────
 const MessagesPagePhase4: React.FC = () => {
-  const { rooms, loading, markRoomRead } = useChatRooms();
+  const { rooms = [], loading, markRoomRead } = useChatRooms();
   const [activeRoomId, setActiveRoomId] = useState<string | null>(null);
   const [search, setSearch] = useState('');
 
@@ -153,10 +153,7 @@ const MessagesPagePhase4: React.FC = () => {
       </div>
 
       {/* ── Chat panel ── */}
-      <div className={cn(
-        'flex-1 min-w-0',
-        !activeRoomId ? 'hidden md:flex' : 'flex'
-      )}>
+      <div className={cn('flex-1 min-w-0 w-full', !activeRoomId ? 'hidden md:flex' : 'flex')}>
         {activeRoom ? (
           <ChatWindow
             room={activeRoom}

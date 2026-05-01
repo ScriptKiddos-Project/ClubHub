@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Bell, Shield, User, Palette, Save, Home } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
@@ -6,14 +6,15 @@ import { Card } from '../components/ui';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { cn } from '../utils';
+import api from '../services/api';
 import toast from 'react-hot-toast';
 
 // ─── SETTINGS PAGE ────────────────────────────────────────────────────────────
 const SETTINGS_TABS = [
-  { id: 'profile', label: 'Profile', icon: <User size={16}/> },
+  { id: 'profile',       label: 'Profile',       icon: <User size={16}/> },
   { id: 'notifications', label: 'Notifications', icon: <Bell size={16}/> },
-  { id: 'privacy', label: 'Privacy', icon: <Shield size={16}/> },
-  { id: 'appearance', label: 'Appearance', icon: <Palette size={16}/> },
+  { id: 'privacy',       label: 'Privacy',       icon: <Shield size={16}/> },
+  { id: 'appearance',    label: 'Appearance',    icon: <Palette size={16}/> },
 ];
 
 export const SettingsPage: React.FC = () => {
@@ -32,7 +33,6 @@ export const SettingsPage: React.FC = () => {
     <div className="p-6 max-w-4xl mx-auto space-y-5">
       <h1 className="text-2xl font-bold text-gray-900">Settings</h1>
       <div className="flex flex-col sm:flex-row gap-5">
-        {/* Tabs */}
         <aside className="sm:w-48 shrink-0">
           <nav className="space-y-0.5">
             {SETTINGS_TABS.map((tab) => (
@@ -45,7 +45,6 @@ export const SettingsPage: React.FC = () => {
           </nav>
         </aside>
 
-        {/* Content */}
         <Card className="flex-1">
           {activeTab === 'profile' && (
             <div className="space-y-4">
@@ -66,10 +65,10 @@ export const SettingsPage: React.FC = () => {
             <div className="space-y-4">
               <h2 className="font-bold text-gray-900">Notification Preferences</h2>
               {[
-                { label: 'Event Reminders', desc: 'Get notified 1 hour before events you are registered for' },
-                { label: 'Attendance Confirmed', desc: 'Receive confirmation when your check-in is recorded' },
-                { label: 'Club Updates', desc: 'News and announcements from clubs you have joined' },
-                { label: 'Points & Achievements', desc: 'When you earn points or unlock a new badge' },
+                { label: 'Event Reminders',          desc: 'Get notified 1 hour before events you are registered for' },
+                { label: 'Attendance Confirmed',      desc: 'Receive confirmation when your check-in is recorded' },
+                { label: 'Club Updates',              desc: 'News and announcements from clubs you have joined' },
+                { label: 'Points & Achievements',     desc: 'When you earn points or unlock a new badge' },
                 { label: 'New Event Recommendations', desc: 'AI-curated events matching your interests' },
               ].map((item) => (
                 <div key={item.label} className="flex items-start justify-between gap-4 py-3 border-b border-gray-50 last:border-0">
@@ -89,10 +88,10 @@ export const SettingsPage: React.FC = () => {
             <div className="space-y-4">
               <h2 className="font-bold text-gray-900">Privacy Settings</h2>
               {[
-                { label: 'Show my profile to other students', enabled: true },
-                { label: 'Allow clubs to see my attendance history', enabled: true },
-                { label: 'Show in "Friends Here" on event check-ins', enabled: true },
-                { label: 'Share profile with recruiters', enabled: false },
+                { label: 'Show my profile to other students',         enabled: true  },
+                { label: 'Allow clubs to see my attendance history',  enabled: true  },
+                { label: 'Show in "Friends Here" on event check-ins', enabled: true  },
+                { label: 'Share profile with recruiters',             enabled: false },
               ].map((item) => (
                 <div key={item.label} className="flex items-center justify-between py-3 border-b border-gray-50 last:border-0">
                   <p className="text-sm text-gray-800">{item.label}</p>
@@ -111,7 +110,8 @@ export const SettingsPage: React.FC = () => {
                 <p className="text-sm font-medium text-gray-700 mb-2">Theme</p>
                 <div className="flex gap-3">
                   {['Light', 'Dark', 'System'].map((t) => (
-                    <button key={t} className={cn('flex-1 py-2.5 rounded-xl border text-sm font-medium transition-all', t === 'Light' ? 'border-indigo-500 text-indigo-600 bg-indigo-50' : 'border-gray-200 text-gray-600 hover:border-gray-300')}>
+                    <button key={t} className={cn('flex-1 py-2.5 rounded-xl border text-sm font-medium transition-all',
+                      t === 'Light' ? 'border-indigo-500 text-indigo-600 bg-indigo-50' : 'border-gray-200 text-gray-600 hover:border-gray-300')}>
                       {t}
                     </button>
                   ))}
@@ -138,28 +138,66 @@ export const SettingsPage: React.FC = () => {
 };
 
 // ─── MANAGEMENT PAGE ──────────────────────────────────────────────────────────
-export const ManagementPage: React.FC = () => (
-  <div className="p-6 max-w-4xl mx-auto">
-    <h1 className="text-2xl font-bold text-gray-900 mb-2">Club Management</h1>
-    <p className="text-gray-500 text-sm mb-6">Manage your club members, roles, and settings</p>
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-      {[
-        { title: 'Member Roster', desc: 'View and manage all club members and their roles', icon: '👥', link: '/management/members' },
-        { title: 'Event Management', desc: 'Create, edit, and monitor your club events', icon: '📅', link: '/events/create' },
-        { title: 'Attendance Reports', desc: 'Download and analyze attendance for all events', icon: '📊', link: '/admin/dashboard' },
-        { title: 'Club Settings', desc: 'Update club profile, banner, and social links', icon: '⚙️', link: '/settings' },
-      ].map((item) => (
-        <Link key={item.title} to={item.link}>
-          <Card className="hover:shadow-md hover:-translate-y-0.5 transition-all cursor-pointer h-full">
-            <div className="text-3xl mb-3">{item.icon}</div>
-            <h3 className="font-bold text-gray-900">{item.title}</h3>
-            <p className="text-sm text-gray-500 mt-1">{item.desc}</p>
-          </Card>
-        </Link>
-      ))}
+
+interface ClubItem { id: string; name?: string; isJoined?: boolean }
+
+const resolveMyClubId = async (): Promise<string> => {
+  // 1. Try /clubs/my (most direct)
+  try {
+    const res = await api.get<{ data: ClubItem[] }>('/clubs/my');
+    const list = res.data?.data ?? [];
+    if (list.length > 0) return list[0].id;
+  } catch { /* not available */ }
+
+  // 2. Fallback: /clubs filtered by isJoined
+  try {
+    const res = await api.get<{ data: ClubItem[] }>('/clubs');
+    const joined = (res.data?.data ?? []).filter((c) => c.isJoined);
+    if (joined.length > 0) return joined[0].id;
+  } catch { /* give up */ }
+
+  return '';
+};
+
+export const ManagementPage: React.FC = () => {
+  const { user } = useAuthStore();
+  const [clubId, setClubId] = useState('');
+
+  useEffect(() => {
+    if (!user) return;
+    resolveMyClubId().then(setClubId).catch(() => undefined);
+  }, [user]);
+
+  const announcementLink = clubId
+    ? `/admin/clubs/${clubId}/announcements/new`
+    : '/announcements';
+
+  const items = [
+    { title: 'Member Roster',      desc: 'View and manage all club members and their roles',   icon: '👥', link: '/management/members' },
+    { title: 'Announcements',      desc: 'Compose and send announcements to your club members', icon: '📣', link: announcementLink },
+    { title: 'Event Management',   desc: 'Create, edit, and monitor your club events',          icon: '📅', link: '/events/create' },
+    { title: 'Attendance Reports', desc: 'Download and analyze attendance for all events',       icon: '📊', link: '/admin/dashboard' },
+    { title: 'Club Settings',      desc: 'Update club profile, banner, and social links',        icon: '⚙️', link: `/admin/clubs/${clubId}/settings` },
+  ];
+
+  return (
+    <div className="p-6 max-w-4xl mx-auto">
+      <h1 className="text-2xl font-bold text-gray-900 mb-2">Management</h1>
+      <p className="text-gray-500 text-sm mb-6">Manage your club members, roles, announcements, and settings</p>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {items.map((item) => (
+          <Link key={item.title} to={item.link}>
+            <Card className="hover:shadow-md hover:-translate-y-0.5 transition-all cursor-pointer h-full">
+              <div className="text-3xl mb-3">{item.icon}</div>
+              <h3 className="font-bold text-gray-900">{item.title}</h3>
+              <p className="text-sm text-gray-500 mt-1">{item.desc}</p>
+            </Card>
+          </Link>
+        ))}
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 // ─── 404 PAGE ─────────────────────────────────────────────────────────────────
 export const NotFoundPage: React.FC = () => (
@@ -172,13 +210,12 @@ export const NotFoundPage: React.FC = () => (
     </Link>
   </div>
 );
+
 export const UnauthorizedPage: React.FC = () => (
   <div className="flex flex-col items-center justify-center min-h-screen text-center p-8">
     <h1 className="text-8xl font-bold text-indigo-600 mb-4">403</h1>
     <h2 className="text-2xl font-semibold text-gray-800 mb-2">Access Denied</h2>
     <p className="text-gray-500 mb-6">You don't have permission to view this page.</p>
-    <a href="/dashboard" className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">
-      Go to Dashboard
-    </a>
+    <a href="/dashboard" className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">Go to Dashboard</a>
   </div>
 );

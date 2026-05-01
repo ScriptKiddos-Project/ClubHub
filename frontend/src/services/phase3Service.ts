@@ -213,12 +213,14 @@ export const fetchCertificates = async (): Promise<CertificatesResponse> => {
   return { certificates: achievements.certificates };
 };
 
-export const downloadCertificate = async (certificateId: string): Promise<string> => {
-  const { data } = await api.get<{ success: true; data: { downloadUrl: string } }>(
-    `/users/me/certificates/${certificateId}/download`
+export async function downloadCertificate(certId: string): Promise<string> {
+  // CRITICAL: responseType blob — backend sends raw binary PDF, not JSON
+  const res = await api.get<Blob>(
+    `/users/me/certificates/${certId}/download`,
+    { responseType: 'blob' }
   );
-  return data.data.downloadUrl;
-};
+  return URL.createObjectURL(res.data);
+}
 
 // ─── RESUME EXPORT ────────────────────────────────────────────────────────────
 

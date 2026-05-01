@@ -177,7 +177,7 @@ const AttendanceReportPage: React.FC = () => {
 
   useEffect(() => {
     if (!eventId) return;
-    setLoading(true); // eslint-disable-line react-hooks/set-state-in-effect
+    setLoading(true);
     eventService
       .getAttendanceReport(eventId)
       .then(({ data }) => {

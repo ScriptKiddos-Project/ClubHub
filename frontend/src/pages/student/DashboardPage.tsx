@@ -58,7 +58,6 @@ const DashboardPage: React.FC = () => {
       
         <RecommendationCards />
         <CampusTrends />
-        <PushNotificationOptIn />
 
       {/* Hero stat + quick actions */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
@@ -137,6 +136,8 @@ const DashboardPage: React.FC = () => {
           </div>
         </Card>
       </div>
+
+      <PushNotificationOptIn />
 
       {/* For You section */}
       <div>

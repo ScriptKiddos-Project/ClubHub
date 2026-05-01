@@ -159,9 +159,9 @@ export const VerifyEmailPage: React.FC = () => {
 const coreSchema = z.object({
   name: z.string().min(2),
   email: z.string().email(),
-  clubId: z.string().min(1, 'Select a club'),
-  role: z.string().min(1, 'Select a role'),
-  accessCode: z.string().min(6, 'Enter your access code'),
+  club_id: z.string().min(1, 'Select a club'),       // ← was clubId
+  access_code: z.string().min(6, 'Enter your access code'), // ← was accessCode
+  // role field removed — backend assigns it from the access code
 });
 type CoreData = z.infer<typeof coreSchema>;
 
@@ -190,23 +190,16 @@ export const CoreJoinPage: React.FC = () => {
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <Input label="Full Name" placeholder="Your name" error={errors.name?.message} {...register('name')}/>
         <Input label="Email" type="email" placeholder="you@campus.edu" error={errors.email?.message} {...register('email')}/>
-        <Select label="Club" error={errors.clubId?.message}
+        <Select label="Club" error={errors.club_id?.message}   
           options={[
             { value: '', label: 'Select your club' },
             ...clubs.map((club) => ({ value: club.id, label: club.name })),
           ]}
-          {...register('clubId')}/>
-        <Select label="Role" error={errors.role?.message}
-          options={[
-            { value: '', label: 'Select your role' },
-            { value: 'member', label: 'Member' },
-            { value: 'secretary', label: 'Secretary' },
-            { value: 'event_manager', label: 'Event Manager' },
-          ]}
-          {...register('role')}/>
+          {...register('club_id')}/>                           
+        {/* Role select removed — the access code determines your role */}
         <Input label="Access Code" placeholder="e.g. CDNG-2025-X7K4M2"
           helperText="Access code provided by your Super Admin"
-          error={errors.accessCode?.message} {...register('accessCode')}/>
+          error={errors.access_code?.message} {...register('access_code')}/> {/* ← was accessCode */}
         <Button type="submit" className="w-full" size="lg" loading={loading}
           style={{ background: 'linear-gradient(135deg, #1a1560, #24243e)', border: 'none' }}>
           Join as Core Member

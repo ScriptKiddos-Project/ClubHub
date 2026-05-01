@@ -18,7 +18,8 @@ import notificationRoutes from "./routes/notification.routes";
 import adminRoutes        from "./routes/admin.routes";
 import userRoutes         from "./routes/user.routes";
 import { rankingRouter, suggestionRouter } from './routes/phase2Routes';
-
+// Add this import at the top with other route imports
+import phase4Routes from "./routes/phase4Routes";
 // ── Bull Queue Workers (import to register processors) ────────────────────────
 // These must be imported here so Bull workers start with the server.
 // No workers = emails never send, reminders never fire.
@@ -49,6 +50,9 @@ app.use(
     xssFilter:  true,
   })
 );
+
+console.log('✅ phase4Routes loaded');
+
 
 // ── CORS — multi-origin for dev + prod simultaneously ─────────────────────────
 const allowedOrigins = (process.env.ALLOWED_ORIGINS ?? "http://localhost:5173")
@@ -129,6 +133,7 @@ app.use("/api/v1/admin",         adminRoutes);
 app.use("/api/v1/users",         userRoutes);
 app.use('/api/v1', rankingRouter);
 app.use('/api/v1', suggestionRouter);
+app.use('/api/v1', phase4Routes); 
 
 // ── 404 + Error Handling (must be last) ───────────────────────────────────────
 app.use(notFoundHandler);

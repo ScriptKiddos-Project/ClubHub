@@ -1,6 +1,4 @@
 // types/phase4.ts
-// All TypeScript types for Phase 4: Chat, Recruitment, Interviews,
-// Smart Notifications, and Notification Preferences.
 
 // ─── CHAT ────────────────────────────────────────────────────────────────────
 
@@ -13,8 +11,8 @@ export interface ChatMessage {
   senderName: string;
   senderAvatar?: string;
   content: string;
-  timestamp: string;       // ISO string
-  isOwn?: boolean;         // derived client-side from auth user id
+  timestamp: string;
+  isOwn?: boolean;
   isDeleted?: boolean;
   replyTo?: {
     messageId: string;
@@ -27,10 +25,10 @@ export interface ChatRoom {
   id: string;
   name: string;
   type: ChatRoomType;
-  entityId: string;        // clubId or eventId
+  entityId: string;
   avatarUrl?: string;
   memberCount: number;
-  isArchived: boolean;     // event chats archived 48h after event end
+  isArchived: boolean;
   lastMessage?: {
     content: string;
     senderName: string;
@@ -39,7 +37,6 @@ export interface ChatRoom {
   unreadCount: number;
 }
 
-// Socket.io event shapes ─────────────────────────────────────────────────────
 export interface SocketChatMessage {
   roomId: string;
   content: string;
@@ -71,7 +68,7 @@ export interface ApplicationField {
   label: string;
   type: 'text' | 'textarea' | 'select';
   required: boolean;
-  options?: string[];       // for 'select' type
+  options?: string[];
 }
 
 export interface RecruitmentForm {
@@ -94,14 +91,14 @@ export interface Application {
   applicantName: string;
   applicantEmail: string;
   applicantDept?: string;
-  answers: Record<string, string>;   // fieldId → answer
+  answers: Record<string, string>;  // always a safe object after normalization
   status: ApplicationStatus;
   submittedAt: string;
-  notes?: string;                    // admin-only notes
+  notes?: string;
 }
 
 export interface ApplicationPayload {
-  formId: string;
+  formId?: string;
   answers: Record<string, string>;
 }
 
@@ -116,7 +113,7 @@ export interface InterviewSlot {
   applicantId: string;
   applicantName: string;
   applicantEmail: string;
-  scheduledAt: string;     // ISO string
+  scheduledAt: string;
   durationMins: number;
   location?: string;
   meetLink?: string;
@@ -126,7 +123,8 @@ export interface InterviewSlot {
 
 export interface ScheduleInterviewPayload {
   applicationId: string;
-  scheduledAt: string;
+  candidateId: string;   // required by backend — pass app.applicantId
+  scheduledAt: string;   // frontend name; service maps → slotTime for API
   durationMins: number;
   location?: string;
   meetLink?: string;

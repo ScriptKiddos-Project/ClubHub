@@ -64,6 +64,7 @@ export const useAuth = () => {
   }, [navigate]);
 
   const handleCoreJoin = useCallback(async (payload: CoreJoinPayload) => {
+    console.log('CoreJoin payload:', payload); // ← add this
     try {
       const { data } = await authService.coreJoin(payload);
       login(data.data.user, data.data.accessToken);

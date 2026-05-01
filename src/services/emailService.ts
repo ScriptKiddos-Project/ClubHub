@@ -39,7 +39,7 @@ export async function sendPasswordResetEmail(options: {
   userName: string;
   token: string;
 }): Promise<void> {
-  const resetUrl = `${FRONTEND_URL}/auth/reset-password?token=${options.token}`;
+  const resetUrl = `${FRONTEND_URL}/reset-password?token=${options.token}`;
   await sendEmail({
     to: options.to,
     subject: 'Reset your ClubHub password',
@@ -156,6 +156,38 @@ export async function sendEventCancellationEmail(options: {
         <a href="${FRONTEND_URL}/events" style="display:inline-block;background:#6366f1;color:white;padding:12px 24px;border-radius:6px;text-decoration:none;margin:16px 0;">
           Browse Events →
         </a>
+      </div>
+    </body></html>`,
+  });
+}
+
+// ─── Club Invite Email ────────────────────────────────────────────────────────
+
+export async function sendClubInviteEmail(options: {
+  to: string;
+  userName: string;
+  clubName: string;
+  invitedByName: string;
+}): Promise<void> {
+  await sendEmail({
+    to: options.to,
+    subject: `🎉 You've been added to ${options.clubName} on ClubHub`,
+    html: `<!DOCTYPE html><html><body style="font-family:Arial,sans-serif;background:#f4f4f4;padding:20px;">
+      <div style="max-width:600px;margin:0 auto;background:white;border-radius:8px;padding:32px;">
+        <h1 style="color:#6366f1;">ClubHub</h1>
+        <h2>You've joined a club! 🎉</h2>
+        <p>Hi ${options.userName},</p>
+        <p>
+          <strong>${options.invitedByName}</strong> has added you to
+          <strong>${options.clubName}</strong> as a member.
+        </p>
+        <p>Head to your dashboard to see the club's events and announcements.</p>
+        <a href="${FRONTEND_URL}/dashboard" style="display:inline-block;background:#6366f1;color:white;padding:12px 24px;border-radius:6px;text-decoration:none;margin:16px 0;">
+          Go to Dashboard →
+        </a>
+        <p style="color:#9ca3af;font-size:13px;">
+          If you think this was a mistake, contact your club admin.
+        </p>
       </div>
     </body></html>`,
   });

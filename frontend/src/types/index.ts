@@ -50,12 +50,26 @@ export interface ResetPasswordPayload {
 export interface CoreJoinPayload {
   name: string;
   email: string;
-  clubId: string;
-  role: string;
-  accessCode: string;
+  club_id: string;
+  access_code: string;
 }
 
 // ─── CLUBS ──────────────────────────────────────────────────────────────────
+
+// ── Club Member (returned by GET /clubs/:id/members) ─────────────────────────
+export interface ClubMember {
+  id:             string;       // user_id
+  role:           "member" | "secretary" | "event_manager";
+  joinedAt:       string;
+  attendanceCount: number;
+  user: {
+    name:         string;
+    email:        string;
+    department:   string | null;
+    avatarUrl:    string | null;
+    total_points: number;
+  };
+}
 
 export type ClubCategory =
   | 'technology'
@@ -99,6 +113,8 @@ export interface Club {
   rankingTier?: 'gold' | 'silver' | 'bronze' | 'unranked';
   rankingRank?: number;
   createdAt: string;
+  // Add if missing:
+  userRole?: "member" | "secretary" | "event_manager" | null;
 }
 
 export interface ClubMembership {

@@ -205,6 +205,7 @@ model Club {
   announcements Announcement[]           @relation("ClubAnnouncements")
   applications  RecruitmentApplication[] @relation("ClubApplications")
   interviews    Interview[]              @relation("ClubInterviews")
+  recruitment_form RecruitmentForm? @relation("ClubRecruitmentForm")
 
   @@index([status])
   @@index([category])
@@ -667,6 +668,20 @@ model NotificationPreference {
   user User @relation("UserNotifPrefs", fields: [user_id], references: [id], onDelete: Cascade)
 
   @@map("notification_preferences")
+}
+
+model RecruitmentForm {
+  id         String    @id @default(uuid())
+  club_id    String    @unique
+  fields     Json
+  is_open    Boolean   @default(true)
+  deadline   DateTime?
+  created_at DateTime  @default(now())
+  updated_at DateTime  @updatedAt
+
+  club Club @relation("ClubRecruitmentForm", fields: [club_id], references: [id], onDelete: Cascade)
+
+  @@map("recruitment_forms")
 }
 
 // ─── ADD these relation fields to existing models ─────────────────────────────

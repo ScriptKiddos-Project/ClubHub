@@ -89,3 +89,25 @@ export const getAnnouncements = async (clubId: string) => {
     include: { author: { select: { id: true, name: true } } },
   });
 };
+
+export const getUserChatRooms = async (userId: string) => {
+  return prisma.chatRoom.findMany({
+    where: {
+      is_archived: false,
+      // rooms where user is a member of the club
+      OR: [
+        {
+          type: 'club',
+          ref_id: {
+            in: (await prisma.userClub.findMany({
+              where: { user_id: userId },
+              select: { club_id: true },
+            })).map(uc => uc.club_id),
+          },
+        },
+        { type: 'event' }, // adjust based on your event membership logic
+      ],
+    },
+    orderBy: { created_at: 'desc' },
+  });
+};

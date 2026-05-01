@@ -2,6 +2,7 @@ import { Server as HttpServer } from 'http';
 import { Server as SocketServer, Socket } from 'socket.io';
 import { verifyAccessToken } from '../utils/jwt';
 import type { JwtPayload } from '../types';
+import { saveMessage, getOrCreateChatRoom } from '../services/chatService';
 
 interface AuthSocket extends Socket {
   user: JwtPayload;
@@ -37,36 +38,81 @@ export const initSocket = (httpServer: HttpServer): SocketServer => {
   eventChat.use(authMiddleware);
   notifications.use(authMiddleware);
 
+  // ── Club Chat ──────────────────────────────────────────────────────────────
   clubChat.on('connection', (socket: Socket) => {
     const authed = socket as AuthSocket;
-    socket.on('join_room', (clubId: string) => socket.join(`club:${clubId}`));
-    socket.on('leave_room', (clubId: string) => socket.leave(`club:${clubId}`));
-    socket.on('send_message', (data: { clubId: string; content: string }) => {
-      clubChat.to(`club:${data.clubId}`).emit('new_message', {
-        senderId: authed.user.userId,
-        senderName: authed.user.email, // JwtPayload has no name — use email
-        content: data.content,
-        timestamp: new Date().toISOString(),
-        clubId: data.clubId,
+
+    socket.on('chat:join', ({ roomId }: { roomId: string }) => {
+      socket.join(`club:${roomId}`);
+    });
+
+    socket.on('chat:leave', ({ roomId }: { roomId: string }) => {
+      socket.leave(`club:${roomId}`);
+    });
+
+    socket.on('chat:typing', ({ roomId }: { roomId: string }) => {
+      socket.to(`club:${roomId}`).emit('chat:typing', {
+        userId: authed.user.userId,
+        name: authed.user.email,
       });
+    });
+
+    socket.on('chat:send', async (data: { roomId: string; content: string }) => {
+      try {
+        const room = await getOrCreateChatRoom('club', data.roomId);
+        const msg = await saveMessage(room.id, authed.user.userId, data.content);
+        clubChat.to(`club:${data.roomId}`).emit('chat:message', {
+          id: msg.id,
+          roomId: data.roomId,
+          senderId: authed.user.userId,
+          senderName: (msg.sender as { name: string }).name,
+          content: data.content,
+          timestamp: msg.created_at.toISOString(),
+        });
+      } catch (err) {
+        socket.emit('chat:error', { message: 'Failed to send message' });
+      }
     });
   });
 
+  // ── Event Chat ─────────────────────────────────────────────────────────────
   eventChat.on('connection', (socket: Socket) => {
     const authed = socket as AuthSocket;
-    socket.on('join_room', (eventId: string) => socket.join(`event:${eventId}`));
-    socket.on('leave_room', (eventId: string) => socket.leave(`event:${eventId}`));
-    socket.on('send_message', (data: { eventId: string; content: string }) => {
-      eventChat.to(`event:${data.eventId}`).emit('new_message', {
-        senderId: authed.user.userId,
-        senderName: authed.user.email,
-        content: data.content,
-        timestamp: new Date().toISOString(),
-        eventId: data.eventId,
+
+    socket.on('chat:join', ({ roomId }: { roomId: string }) => {
+      socket.join(`event:${roomId}`);
+    });
+
+    socket.on('chat:leave', ({ roomId }: { roomId: string }) => {
+      socket.leave(`event:${roomId}`);
+    });
+
+    socket.on('chat:typing', ({ roomId }: { roomId: string }) => {
+      socket.to(`event:${roomId}`).emit('chat:typing', {
+        userId: authed.user.userId,
+        name: authed.user.email,
       });
+    });
+
+    socket.on('chat:send', async (data: { roomId: string; content: string }) => {
+      try {
+        const room = await getOrCreateChatRoom('event', data.roomId);
+        const msg = await saveMessage(room.id, authed.user.userId, data.content);
+        eventChat.to(`event:${data.roomId}`).emit('chat:message', {
+          id: msg.id,
+          roomId: data.roomId,
+          senderId: authed.user.userId,
+          senderName: (msg.sender as { name: string }).name,
+          content: data.content,
+          timestamp: msg.created_at.toISOString(),
+        });
+      } catch (err) {
+        socket.emit('chat:error', { message: 'Failed to send message' });
+      }
     });
   });
 
+  // ── Notifications ──────────────────────────────────────────────────────────
   notifications.on('connection', (socket: Socket) => {
     const authed = socket as AuthSocket;
     socket.join(`user:${authed.user.userId}`);

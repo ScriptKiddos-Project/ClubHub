@@ -21,17 +21,24 @@ export const useEvents = (options: UseEventsOptions = {}) => {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
 
+  // Serialise arrays to stable strings — prevents useCallback/useEffect firing
+  // on every render just because the caller passes a new array reference.
+  const tagsKey = options.tags?.join(',') ?? '';
+  const skillAreasKey = options.skillAreas?.join(',') ?? '';
+
   const fetchEvents = useCallback(async (p = 1) => {
     setLoading(true);
     setError(null);
     try {
       const { data } = await eventService.list({
-        page: p, limit: 12,
+        page: p,
+        limit: 12,
         clubId: options.clubId,
         type: options.type,
         search: options.search,
-        tags: options.tags,
-        skillAreas: options.skillAreas,
+        // Re-parse from stable string so array identity inside the closure is consistent
+        tags: tagsKey ? tagsKey.split(',') : undefined,
+        skillAreas: skillAreasKey ? skillAreasKey.split(',') : undefined,
         volunteerHoursMin: options.volunteerHoursMin,
         isFeatured: options.isFeatured,
       });
@@ -48,24 +55,32 @@ export const useEvents = (options: UseEventsOptions = {}) => {
     options.clubId,
     options.type,
     options.search,
-    options.tags,
-    options.skillAreas,
     options.volunteerHoursMin,
     options.isFeatured,
+    tagsKey,
+    skillAreasKey,
   ]);
 
   useEffect(() => {
-    if (options.autoFetch !== false) fetchEvents(1); // eslint-disable-line react-hooks/set-state-in-effect
+    // setState calls inside fetchEvents are async (inside .then/.finally),
+    // not synchronous in the effect body — this pattern is safe and intentional.
+    if (options.autoFetch !== false) void fetchEvents(1);
   }, [fetchEvents, options.autoFetch]);
 
-  const loadMore = () => { if (page < totalPages) fetchEvents(page + 1); };
+  const loadMore = () => {
+    if (page < totalPages) void fetchEvents(page + 1);
+  };
 
   const registerForEvent = useCallback(async (id: string) => {
     try {
       await eventService.register(id);
-      setEvents((prev) => prev.map((e) =>
-        e.id === id ? { ...e, isRegistered: true, registrationCount: e.registrationCount + 1 } : e
-      ));
+      setEvents((prev) =>
+        prev.map((e) =>
+          e.id === id
+            ? { ...e, isRegistered: true, registrationCount: e.registrationCount + 1 }
+            : e
+        )
+      );
       toast.success('Successfully registered! Check your email for confirmation.');
     } catch {
       toast.error('Failed to register. Event may be full.');
@@ -75,16 +90,30 @@ export const useEvents = (options: UseEventsOptions = {}) => {
   const unregisterFromEvent = useCallback(async (id: string) => {
     try {
       await eventService.unregister(id);
-      setEvents((prev) => prev.map((e) =>
-        e.id === id ? { ...e, isRegistered: false, registrationCount: e.registrationCount - 1 } : e
-      ));
+      setEvents((prev) =>
+        prev.map((e) =>
+          e.id === id
+            ? { ...e, isRegistered: false, registrationCount: e.registrationCount - 1 }
+            : e
+        )
+      );
       toast.success('Unregistered from event');
     } catch {
       toast.error('Failed to unregister');
     }
   }, []);
 
-  return { events, loading, error, page, totalPages, loadMore, fetchEvents, registerForEvent, unregisterFromEvent };
+  return {
+    events,
+    loading,
+    error,
+    page,
+    totalPages,
+    loadMore,
+    fetchEvents,
+    registerForEvent,
+    unregisterFromEvent,
+  };
 };
 
 export const useEvent = (id: string) => {
@@ -94,8 +123,9 @@ export const useEvent = (id: string) => {
 
   useEffect(() => {
     if (!id) return;
-    setLoading(true); // eslint-disable-line react-hooks/set-state-in-effect
-    eventService.get(id)
+    setLoading(true);
+    eventService
+      .get(id)
       .then(({ data }) => setEvent(data.data))
       .catch(() => setError('Failed to load event'))
       .finally(() => setLoading(false));

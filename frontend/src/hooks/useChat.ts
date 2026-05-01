@@ -29,10 +29,9 @@ const getSocket = async (token: string): Promise<SocketLike> => {
   if (_socket?.connected) return _socket;
   const io = await getIo();
   _socket = io(
-    import.meta.env.VITE_API_URL?.replace('/api/v1', '') ?? 'http://localhost:5000',
+    `${import.meta.env.VITE_API_URL?.replace('/api/v1', '') ?? 'http://localhost:5000'}/club-chat`,
     {
       auth: { token },
-      namespace: '/club-chat',
       transports: ['websocket'],
       reconnectionAttempts: 5,
       reconnectionDelay: 1500,

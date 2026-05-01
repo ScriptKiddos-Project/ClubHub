@@ -161,3 +161,38 @@ export async function getAttendanceReport(req: Request, res: Response) {
     });
   }
 }
+
+// ── GET /api/v1/events/:id/attendance-config ──────────────────────────────────
+export async function getAttendanceConfig(req: Request, res: Response) {
+  try {
+    const { id: eventId } = req.params;
+    const result = await attendanceService.getAttendanceConfig(eventId);
+
+    return res.status(200).json({ success: true, data: result });
+  } catch (err: unknown) {
+    const error = err instanceof AppError ? err : (err instanceof Error ? err : new Error(String(err)));
+    const statusCode = error instanceof AppError ? error.statusCode : 500;
+    return res.status(statusCode).json({
+      success: false,
+      error: { code: 'CONFIG_FETCH_ERROR', message: error.message },
+    });
+  }
+}
+
+// ── PATCH /api/v1/events/:id/attendance-config ────────────────────────────────
+export async function updateAttendanceConfig(req: Request, res: Response) {
+  try {
+    const { id: eventId } = req.params;
+    const actorId = req.user!.id;
+    const result = await attendanceService.updateAttendanceConfig(eventId, actorId, req.body);
+
+    return res.status(200).json({ success: true, data: result });
+  } catch (err: unknown) {
+    const error = err instanceof AppError ? err : (err instanceof Error ? err : new Error(String(err)));
+    const statusCode = error instanceof AppError ? error.statusCode : 500;
+    return res.status(statusCode).json({
+      success: false,
+      error: { code: 'CONFIG_UPDATE_ERROR', message: error.message },
+    });
+  }
+}

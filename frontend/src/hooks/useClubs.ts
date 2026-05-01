@@ -22,7 +22,7 @@ export const useClubs = (autoFetch = true) => {
   }, []);
 
   useEffect(() => {
-    if (autoFetch) fetchClubs(); // eslint-disable-line react-hooks/set-state-in-effect
+    if (autoFetch) fetchClubs();
   }, [autoFetch, fetchClubs]);
 
   const joinClub = useCallback(async (id: string) => {
@@ -66,4 +66,22 @@ export const useClub = (id: string) => {
   }, [id]);
 
   return { club, loading, error };
+};
+
+export const useClubMembers = (clubId: string) => {
+  const [members, setMembers] = useState<import('../types').ClubMember[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError]   = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!clubId) return;
+    setLoading(true);
+    setError(null);
+    clubService.getMembers(clubId)
+      .then((data) => setMembers(data.data.members))
+      .catch(() => setError('Failed to load members'))
+      .finally(() => setLoading(false));
+  }, [clubId]);
+
+  return { members, loading, error };
 };

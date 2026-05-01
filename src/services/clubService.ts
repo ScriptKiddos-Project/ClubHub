@@ -78,6 +78,48 @@ export async function listClubs(
   };
 }
 
+// ─── List ALL clubs regardless of status (Super Admin only) ──────────────────
+export async function listAllClubs(
+  filters: ClubFilters
+): Promise<PaginatedResponse<ClubListItem>> {
+  const { page = 1, limit = 20, category, search } = filters;
+  const skip = (page - 1) * limit;
+
+  const where: Record<string, unknown> = {};
+  if (category) where.category = category;
+  if (search) {
+    where.OR = [
+      { name: { contains: search, mode: "insensitive" } },
+      { description: { contains: search, mode: "insensitive" } },
+    ];
+  }
+
+  const [clubs, total] = await Promise.all([
+    prisma.club.findMany({
+      where,
+      skip,
+      take: limit,
+      orderBy: { created_at: "desc" },
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        category: true,
+        logo_url: true,
+        member_count: true,
+        status: true,
+        description: true,
+      },
+    }),
+    prisma.club.count({ where }),
+  ]);
+
+  return {
+    data: clubs,
+    meta: { total, page, limit, has_more: skip + clubs.length < total },
+  };
+}
+
 // ─── Get club detail by ID ────────────────────────────────────────────────────
 export async function getClubById(
   clubId: string,
@@ -117,7 +159,6 @@ export async function getClubById(
 
   if (!club) throw new AppError("Club not found", 404, "CLUB_NOT_FOUND");
 
-  // Check membership
   let is_member = false;
   let user_role: ClubMemberRole | null = null;
 
@@ -136,7 +177,7 @@ export async function getClubById(
       ...e,
       club_name: club.name,
       club_logo: club.logo_url,
-      is_registered: false, // not fetching per-user status here
+      is_registered: false,
       spots_left: e.capacity - e.registration_count,
     })),
     is_member,
@@ -149,7 +190,6 @@ export async function createClub(
   input: CreateClubInput,
   creatorId: string
 ): Promise<{ id: string; name: string; slug: string; status: ClubStatus }> {
-  // Check for name/slug uniqueness
   const existing = await prisma.club.findFirst({
     where: { OR: [{ name: input.name }, { slug: input.slug }] },
   });
@@ -172,7 +212,6 @@ export async function createClub(
     select: { id: true, name: true, slug: true, status: true },
   });
 
-  // Create audit log
   await prisma.auditLog.create({
     data: {
       action: "CLUB_CREATED",
@@ -184,6 +223,57 @@ export async function createClub(
   });
 
   return club;
+}
+
+// ─── Update any club's details (Super Admin only) ─────────────────────────────
+export async function updateClub(
+  clubId: string,
+  input: Partial<CreateClubInput>,
+  adminId: string
+): Promise<ClubListItem> {
+  const club = await prisma.club.findUnique({ where: { id: clubId } });
+  if (!club) throw new AppError("Club not found", 404, "CLUB_NOT_FOUND");
+
+  // If name or slug is changing, check uniqueness
+  if (input.name && input.name !== club.name) {
+    const nameConflict = await prisma.club.findFirst({
+      where: { name: input.name, id: { not: clubId } },
+    });
+    if (nameConflict) throw new AppError("A club with this name already exists", 409, "CLUB_DUPLICATE");
+  }
+  if (input.slug && input.slug !== club.slug) {
+    const slugConflict = await prisma.club.findFirst({
+      where: { slug: input.slug, id: { not: clubId } },
+    });
+    if (slugConflict) throw new AppError("A club with this slug already exists", 409, "CLUB_DUPLICATE");
+  }
+
+  const updated = await prisma.club.update({
+    where: { id: clubId },
+    data: input,
+    select: {
+      id: true,
+      name: true,
+      slug: true,
+      category: true,
+      logo_url: true,
+      member_count: true,
+      status: true,
+      description: true,
+    },
+  });
+
+  await prisma.auditLog.create({
+    data: {
+      action: "CLUB_UPDATED",
+      actor_id: adminId,
+      target_type: "club",
+      target_id: clubId,
+      metadata: { changes: input },
+    },
+  });
+
+  return updated;
 }
 
 // ─── List pending clubs (Super Admin only) ────────────────────────────────────
@@ -263,7 +353,6 @@ export async function joinClub(
     prisma.userClub.create({
       data: { user_id: userId, club_id: clubId, role: "member" },
     }),
-    // Increment cached count
     prisma.club.update({
       where: { id: clubId },
       data: { member_count: { increment: 1 } },

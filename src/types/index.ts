@@ -304,3 +304,10 @@ export interface AttendanceReportRow {
   method:        AttendanceMethod | null;
   pointsAwarded: boolean;
 }
+
+export interface CoreJoinPayload {
+  name: string;
+  email: string;
+  club_id: string;
+  access_code: string;
+}

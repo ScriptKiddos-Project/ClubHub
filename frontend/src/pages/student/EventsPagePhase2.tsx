@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import { Filter, LayoutGrid, List, Calendar as CalendarIcon, Plus, X } from 'lucide-react';
 import { useEvents } from '../../hooks/useEvents';
@@ -24,25 +24,63 @@ const EventsPagePhase2: React.FC = () => {
 
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [showFilters, setShowFilters] = useState(false);
+
+  // Read search from URL as a stable primitive — no useEffect needed.
+  const searchQuery = searchParams.get('search') ?? undefined;
+
+  // FIX: derive initial isFeatured from URL but keep filters as independent state.
+  // Do NOT use useEffect + setFilters to sync from URL — that's the pattern
+  // that triggers the react-hooks/set-state-in-effect lint error and causes
+  // cascading renders. Instead, reset filters by keying on searchQuery below.
   const [filters, setFilters] = useState<EventFilters>({
     isFeatured: searchParams.get('featured') === 'true' || undefined,
   });
 
+  // FIX: stable serialised keys for arrays — avoids useMemo with computed deps
+  // (which triggered react-hooks/use-memo lint error).
+  // Plain string variables are safe as useEvents hook deps.
+  const tagsKey = filters.tags?.join(',') ?? '';
+  const skillAreasKey = filters.skillAreas?.join(',') ?? '';
+
+  // Re-parse from the stable strings so useEvents gets consistent array identity.
+  const stableTags = useMemo(
+    () => (tagsKey ? tagsKey.split(',') : undefined),
+    [tagsKey]
+  );
+  const stableSkillAreas = useMemo(
+    () => (skillAreasKey ? skillAreasKey.split(',') : undefined),
+    [skillAreasKey]
+  );
+
+  // FIX: when a navbar search arrives, clear filters inline during render
+  // (not in a useEffect) so there's no cascading render cycle.
+  // We track the last searchQuery we responded to and reset filters if it changed.
+  const [lastSearchQuery, setLastSearchQuery] = useState(searchQuery);
+  const activeFilters =
+    searchQuery !== lastSearchQuery
+      ? (() => {
+          // Inline side-effect-free reset: schedule state updates, return defaults
+          setLastSearchQuery(searchQuery);
+          setFilters(DEFAULT_FILTERS);
+          return DEFAULT_FILTERS;
+        })()
+      : filters;
+
   const { events, loading, registerForEvent, unregisterFromEvent } = useEvents({
-    search: searchParams.get('search') ?? undefined,
-    clubId: filters.clubId,
-    type: filters.eventType,
-    tags: filters.tags,
-    skillAreas: filters.skillAreas,
-    volunteerHoursMin: filters.volunteerHoursMin,
-    isFeatured: filters.isFeatured,
+    search: searchQuery,
+    clubId: activeFilters.clubId,
+    type: activeFilters.eventType,
+    tags: stableTags,
+    skillAreas: stableSkillAreas,
+    volunteerHoursMin: activeFilters.volunteerHoursMin,
+    isFeatured: activeFilters.isFeatured,
   });
 
   const displayEvents = events.filter((e) => {
-    if (filters.tags?.length && !filters.tags.some((t) => e.tags.includes(t))) return false;
-    if (filters.skillAreas?.length && !filters.skillAreas.some((s) => e.skillAreas?.includes(s))) return false;
-    if (filters.volunteerHoursMin && e.volunteerHours < filters.volunteerHoursMin) return false;
-    if (filters.isFeatured && !e.isFeatured) return false;
+    if (activeFilters.tags?.length && !activeFilters.tags.some((t) => e.tags.includes(t))) return false;
+    if (activeFilters.skillAreas?.length && !activeFilters.skillAreas.some((s) => e.skillAreas?.includes(s))) return false;
+    if (activeFilters.volunteerHoursMin && e.volunteerHours < activeFilters.volunteerHoursMin) return false;
+    if (activeFilters.isFeatured && !e.isFeatured) return false;
     return true;
   });
 
@@ -52,33 +90,37 @@ const EventsPagePhase2: React.FC = () => {
 
   const handleReset = useCallback(() => setFilters(DEFAULT_FILTERS), []);
 
+  const clearAll = useCallback(() => {
+    handleReset();
+    if (searchQuery) navigate('/events', { replace: true });
+  }, [handleReset, searchQuery, navigate]);
+
   const activeFilterCount =
-    (filters.eventType ? 1 : 0) +
-    (filters.skillAreas?.length ?? 0) +
-    (filters.tags?.length ?? 0) +
-    ((filters.volunteerHoursMin ?? 0) > 0 ? 1 : 0) +
-    (filters.isFeatured ? 1 : 0);
+    (activeFilters.eventType ? 1 : 0) +
+    (activeFilters.skillAreas?.length ?? 0) +
+    (activeFilters.tags?.length ?? 0) +
+    ((activeFilters.volunteerHoursMin ?? 0) > 0 ? 1 : 0) +
+    (activeFilters.isFeatured ? 1 : 0);
 
   const canCreate =
     user?.role === 'event_manager' ||
     user?.role === 'secretary' ||
     user?.role === 'super_admin';
 
-  // Map events to FullCalendar format
   const EVENT_COLORS: Record<string, string> = {
-  hackathon: '#6366f1',
-  workshop: '#f59e0b',
-  cultural: '#ec4899',
-  seminar: '#10b981',
-  sports: '#3b82f6',
-};
+    hackathon: '#6366f1',
+    workshop: '#f59e0b',
+    cultural: '#ec4899',
+    seminar: '#10b981',
+    sports: '#3b82f6',
+  };
 
-const calendarEvents = displayEvents.map((e) => ({
-  id: e.id,
-  title: e.title,
-  date: e.date,
-  color: EVENT_COLORS[e.eventType] ?? '#6366f1',
-}));
+  const calendarEvents = displayEvents.map((e) => ({
+    id: e.id,
+    title: e.title,
+    date: e.date,
+    color: EVENT_COLORS[e.eventType] ?? '#6366f1',
+  }));
 
   return (
     <div className="flex h-full">
@@ -92,7 +134,7 @@ const calendarEvents = displayEvents.map((e) => ({
       >
         {showFilters && (
           <AdvancedEventFilters
-            filters={filters}
+            filters={activeFilters}
             onChange={handleFilterChange}
             onReset={handleReset}
           />
@@ -106,7 +148,13 @@ const calendarEvents = displayEvents.map((e) => ({
         <div className="flex items-center justify-between gap-3 flex-wrap">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Events</h1>
-            <p className="text-gray-500 text-sm">Discover events across all clubs</p>
+            {searchQuery ? (
+              <p className="text-gray-500 text-sm">
+                Results for <span className="font-medium text-gray-700">"{searchQuery}"</span>
+              </p>
+            ) : (
+              <p className="text-gray-500 text-sm">Discover events across all clubs</p>
+            )}
           </div>
           <div className="flex items-center gap-2">
             {canCreate && (
@@ -117,7 +165,6 @@ const calendarEvents = displayEvents.map((e) => ({
               </Link>
             )}
 
-            {/* Filter toggle */}
             <button
               onClick={() => setShowFilters((p) => !p)}
               className={cn(
@@ -136,7 +183,6 @@ const calendarEvents = displayEvents.map((e) => ({
               )}
             </button>
 
-            {/* View mode toggle */}
             <div className="flex items-center border border-gray-200 rounded-xl overflow-hidden bg-white">
               {([
                 { mode: 'grid' as ViewMode, icon: <LayoutGrid size={15} />, title: 'Grid view' },
@@ -166,7 +212,7 @@ const calendarEvents = displayEvents.map((e) => ({
         {showFilters && (
           <div className="lg:hidden">
             <AdvancedEventFilters
-              filters={filters}
+              filters={activeFilters}
               onChange={handleFilterChange}
               onReset={handleReset}
             />
@@ -174,16 +220,22 @@ const calendarEvents = displayEvents.map((e) => ({
         )}
 
         {/* Active filter chips */}
-        {activeFilterCount > 0 && (
+        {(activeFilterCount > 0 || searchQuery) && (
           <div className="flex flex-wrap gap-2 items-center">
             <span className="text-xs text-gray-500 font-medium">Active filters:</span>
-            {filters.isFeatured && (
+            {searchQuery && (
+              <Chip
+                label={`Search: "${searchQuery}"`}
+                onRemove={() => navigate('/events', { replace: true })}
+              />
+            )}
+            {activeFilters.isFeatured && (
               <Chip label="Featured" onRemove={() => setFilters((p) => ({ ...p, isFeatured: undefined }))} />
             )}
-            {filters.eventType && (
-              <Chip label={filters.eventType} onRemove={() => setFilters((p) => ({ ...p, eventType: undefined }))} />
+            {activeFilters.eventType && (
+              <Chip label={activeFilters.eventType} onRemove={() => setFilters((p) => ({ ...p, eventType: undefined }))} />
             )}
-            {(filters.skillAreas ?? []).map((s) => (
+            {(activeFilters.skillAreas ?? []).map((s) => (
               <Chip
                 key={s}
                 label={s}
@@ -192,7 +244,7 @@ const calendarEvents = displayEvents.map((e) => ({
                 }
               />
             ))}
-            {(filters.tags ?? []).map((t) => (
+            {(activeFilters.tags ?? []).map((t) => (
               <Chip
                 key={t}
                 label={`#${t}`}
@@ -201,25 +253,25 @@ const calendarEvents = displayEvents.map((e) => ({
                 }
               />
             ))}
-            {(filters.volunteerHoursMin ?? 0) > 0 && (
+            {(activeFilters.volunteerHoursMin ?? 0) > 0 && (
               <Chip
-                label={`${filters.volunteerHoursMin}+ hrs`}
+                label={`${activeFilters.volunteerHoursMin}+ hrs`}
                 onRemove={() => setFilters((p) => ({ ...p, volunteerHoursMin: undefined }))}
               />
             )}
-            <button onClick={handleReset} className="text-xs text-gray-400 hover:text-gray-600 underline ml-1">
+            <button onClick={clearAll} className="text-xs text-gray-400 hover:text-gray-600 underline ml-1">
               Clear all
             </button>
           </div>
         )}
 
-        {/* Featured section — only in grid/list, no active filters */}
-        {activeFilterCount === 0 && viewMode !== 'timeline' && viewMode !== 'calendar' && (
+        {/* Featured section */}
+        {activeFilterCount === 0 && !searchQuery && viewMode !== 'timeline' && viewMode !== 'calendar' && (
           <FeaturedEventsSection />
         )}
 
         {/* Divider */}
-        {activeFilterCount === 0 && viewMode !== 'timeline' && viewMode !== 'calendar' && (
+        {activeFilterCount === 0 && !searchQuery && viewMode !== 'timeline' && viewMode !== 'calendar' && (
           <div className="flex items-center gap-3">
             <div className="flex-1 h-px bg-gray-100" />
             <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">All Events</span>
@@ -227,7 +279,7 @@ const calendarEvents = displayEvents.map((e) => ({
           </div>
         )}
 
-        {/* ── Events display ── */}
+        {/* Events display */}
         {loading ? (
           viewMode === 'grid' ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -242,13 +294,17 @@ const calendarEvents = displayEvents.map((e) => ({
           )
         ) : displayEvents.length === 0 && viewMode !== 'calendar' ? (
           <EmptyState
-            title="No events found"
-            description="Try adjusting your filters or check back later."
+            title={searchQuery ? `No results for "${searchQuery}"` : 'No events found'}
+            description={
+              searchQuery
+                ? 'Try a different search term or clear the search.'
+                : 'Try adjusting your filters or check back later.'
+            }
             icon={<CalendarIcon size={24} />}
             action={
-              activeFilterCount > 0 ? (
-                <button onClick={handleReset} className="text-sm text-indigo-600 font-medium hover:underline">
-                  Clear filters
+              (activeFilterCount > 0 || searchQuery) ? (
+                <button onClick={clearAll} className="text-sm text-indigo-600 font-medium hover:underline">
+                  Clear {searchQuery ? 'search' : 'filters'}
                 </button>
               ) : undefined
             }
@@ -270,17 +326,16 @@ const calendarEvents = displayEvents.map((e) => ({
         ) : viewMode === 'timeline' ? (
           <EventTimelineView events={displayEvents} />
         ) : (
-          // ── Calendar view (FullCalendar) ──
           <CalendarView
             events={calendarEvents}
             onEventClick={(id) => navigate(`/events/${id}`)}
           />
         )}
 
-        {/* Results count — hide in calendar mode */}
         {!loading && displayEvents.length > 0 && viewMode !== 'calendar' && (
           <p className="text-xs text-gray-400 text-center">
             Showing {displayEvents.length} event{displayEvents.length !== 1 ? 's' : ''}
+            {searchQuery && <> for "{searchQuery}"</>}
           </p>
         )}
       </div>
@@ -288,7 +343,6 @@ const calendarEvents = displayEvents.map((e) => ({
   );
 };
 
-// ─── Removable chip ───────────────────────────────────────────────────────────
 const Chip: React.FC<{ label: string; onRemove: () => void }> = ({ label, onRemove }) => (
   <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-indigo-100 text-indigo-700 rounded-full text-xs font-medium">
     {label}

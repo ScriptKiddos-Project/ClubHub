@@ -445,3 +445,76 @@ async function _awardPointsAndHours(userId: string, event: { id: string; points_
 
   return { points: pointsToAward, hours: hoursToAward };
 }
+
+// ── Attendance Config ─────────────────────────────────────────────────────────
+export async function getAttendanceConfig(eventId: string) {
+  const event = await prisma.event.findUnique({
+    where: { id: eventId },
+    select: {
+      id: true,
+      qr_attendance_enabled: true,
+      pin_attendance_enabled: true,
+    },
+  });
+
+  if (!event) {
+    throw Object.assign(new Error('Event not found'), { statusCode: 404 });
+  }
+
+  // Return config, defaulting geo/manual flags (not stored in DB yet)
+  return {
+    eventId: event.id,
+    qrEnabled: event.qr_attendance_enabled,
+    pinEnabled: event.pin_attendance_enabled,
+    geoEnabled: false,   // extend schema if needed
+    manualEnabled: true, // always available as fallback
+  };
+}
+
+export async function updateAttendanceConfig(
+  eventId: string,
+  actorId: string,
+  config: {
+    qrEnabled?: boolean;
+    pinEnabled?: boolean;
+    geoEnabled?: boolean;
+    manualEnabled?: boolean;
+  }
+) {
+  const event = await prisma.event.findUnique({ where: { id: eventId } });
+
+  if (!event) {
+    throw Object.assign(new Error('Event not found'), { statusCode: 404 });
+  }
+
+  const updated = await prisma.event.update({
+    where: { id: eventId },
+    data: {
+      ...(config.qrEnabled  !== undefined && { qr_attendance_enabled:  config.qrEnabled }),
+      ...(config.pinEnabled !== undefined && { pin_attendance_enabled: config.pinEnabled }),
+    },
+    select: {
+      id: true,
+      qr_attendance_enabled: true,
+      pin_attendance_enabled: true,
+    },
+  });
+
+  await prisma.auditLog.create({
+    data: {
+      action: 'ATTENDANCE_CONFIG_UPDATED',
+      actor_id: actorId,
+      target_type: 'Event',
+      target_id: eventId,
+      metadata: config,
+    },
+  });
+
+  return {
+    eventId: updated.id,
+    qrEnabled: updated.qr_attendance_enabled,
+    pinEnabled: updated.pin_attendance_enabled,
+    geoEnabled: config.geoEnabled ?? false,
+    manualEnabled: config.manualEnabled ?? true,
+  };
+}

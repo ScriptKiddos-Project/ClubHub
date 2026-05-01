@@ -151,19 +151,19 @@ const PointsBreakdownPage: React.FC = () => {
           <StatCard
             icon={<Star size={20} className="text-yellow-500" />}
             label="Total Points"
-            value={data.totalPoints.toLocaleString()}
+            value={(data.totalPoints ?? 0).toLocaleString()}
             color="bg-yellow-50"
           />
           <StatCard
             icon={<Clock size={20} className="text-emerald-500" />}
             label="Volunteer Hours"
-            value={`${data.totalHours}h`}
+            value={`${data.totalHours ?? 0}h`}
             color="bg-emerald-50"
           />
           <StatCard
             icon={<TrendingUp size={20} className="text-indigo-500" />}
             label="Events Attended"
-            value={data.pagination.total.toString()}
+            value={(data.pagination?.total ?? 0).toString()}
             color="bg-indigo-50"
           />
         </div>

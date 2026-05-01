@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Search } from 'lucide-react';
+import { useSearchParams } from 'react-router-dom';
 import { useClubs } from '../../hooks/useClubs';
 import { ClubCard } from '../../components/clubs/ClubCard';
 import { CardSkeleton, EmptyState, Badge } from '../../components/ui';
@@ -26,12 +27,17 @@ const MOCK_CLUBS: Club[] = [
 ];
 
 const ClubsPage: React.FC = () => {
-  const { clubs, loading, joinClub, leaveClub, fetchClubs } = useClubs();
-  const [search, setSearch] = useState('');
+  const [searchParams] = useSearchParams();
+  const { clubs, loading, fetchClubs } = useClubs();
+
+  const [search, setSearch] = useState(searchParams.get('search') ?? '');
   const [activeCategory, setActiveCategory] = useState('');
 
   const displayClubs = (clubs.length > 0 ? clubs : MOCK_CLUBS).filter((c) => {
-    const matchSearch = !search || c.name.toLowerCase().includes(search.toLowerCase()) || c.description.toLowerCase().includes(search.toLowerCase());
+    const matchSearch =
+      !search ||
+      c.name.toLowerCase().includes(search.toLowerCase()) ||
+      (c.description ?? '').toLowerCase().includes(search.toLowerCase());
     const matchCat = !activeCategory || c.category === activeCategory;
     return matchSearch && matchCat;
   });
@@ -45,16 +51,30 @@ const ClubsPage: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Clubs</h1>
-          <p className="text-gray-500 text-sm">Discover and join communities that match your interests</p>
+          {search ? (
+            <p className="text-gray-500 text-sm">
+              Results for <span className="font-medium text-gray-700">"{search}"</span>
+            </p>
+          ) : (
+            <p className="text-gray-500 text-sm">Discover and join communities that match your interests</p>
+          )}
         </div>
         <div className="relative max-w-xs w-full">
-          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"/>
+          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search clubs..."
             className="w-full pl-9 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
           />
+          {search && (
+            <button
+              onClick={() => setSearch('')}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+            >
+              ×
+            </button>
+          )}
         </div>
       </div>
 
@@ -63,8 +83,16 @@ const ClubsPage: React.FC = () => {
         {CATEGORIES.map((cat) => (
           <button
             key={cat.value}
-            onClick={() => { setActiveCategory(cat.value); fetchClubs(cat.value || undefined); }}
-            className={cn('px-4 py-1.5 rounded-full text-sm font-medium transition-all border', activeCategory === cat.value ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-gray-600 border-gray-200 hover:border-indigo-300 hover:text-indigo-600')}
+            onClick={() => {
+              setActiveCategory(cat.value);
+              fetchClubs(cat.value || undefined);
+            }}
+            className={cn(
+              'px-4 py-1.5 rounded-full text-sm font-medium transition-all border',
+              activeCategory === cat.value
+                ? 'bg-indigo-600 text-white border-indigo-600'
+                : 'bg-white text-gray-600 border-gray-200 hover:border-indigo-300 hover:text-indigo-600'
+            )}
           >
             {cat.label}
           </button>
@@ -73,7 +101,7 @@ const ClubsPage: React.FC = () => {
 
       {loading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {Array.from({ length: 8 }).map((_, i) => <CardSkeleton key={i}/>)}
+          {Array.from({ length: 8 }).map((_, i) => <CardSkeleton key={i} />)}
         </div>
       ) : (
         <>
@@ -85,7 +113,7 @@ const ClubsPage: React.FC = () => {
               </h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                 {myClubs.map((club) => (
-                  <ClubCard key={club.id} club={club} onJoin={joinClub} onLeave={leaveClub}/>
+                  <ClubCard key={club.id} club={club} />
                 ))}
               </div>
             </div>
@@ -94,17 +122,23 @@ const ClubsPage: React.FC = () => {
           {/* All Clubs */}
           {allClubs.length > 0 && (
             <div>
-              <h2 className="text-base font-bold text-gray-900 mb-3">Discover Clubs</h2>
+              <h2 className="text-base font-bold text-gray-900 mb-3">
+                {search ? 'Matching Clubs' : 'Discover Clubs'}
+              </h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                 {allClubs.map((club) => (
-                  <ClubCard key={club.id} club={club} onJoin={joinClub} onLeave={leaveClub}/>
+                  <ClubCard key={club.id} club={club} />
                 ))}
               </div>
             </div>
           )}
 
           {displayClubs.length === 0 && (
-            <EmptyState title="No clubs found" description="Try a different search or category." icon={<Search size={24}/>}/>
+            <EmptyState
+              title="No clubs found"
+              description={search ? `No clubs match "${search}". Try a different search.` : 'Try a different category.'}
+              icon={<Search size={24} />}
+            />
           )}
         </>
       )}

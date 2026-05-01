@@ -21,6 +21,8 @@ import {
   markManualAttendance,
   markBulkAttendance,
   getAttendanceReport,
+  getAttendanceConfig,
+  updateAttendanceConfig,
 } from '../controllers/attendanceController';
 
 const router = Router();
@@ -83,6 +85,19 @@ router.get(
   '/:id/attendance-report',
   rbac('secretary', 'event_manager', 'super_admin'),
   getAttendanceReport
+);
+
+// ── Attendance Config (Secretary + Event Manager) ─────────────────────────────
+router.get(
+  '/:id/attendance-config',
+  rbac('secretary', 'event_manager', 'super_admin'),
+  getAttendanceConfig
+);
+
+router.put(
+  '/:id/attendance-config',
+  rbac('secretary', 'event_manager', 'super_admin'),
+  updateAttendanceConfig
 );
 
 export default router;

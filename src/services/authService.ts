@@ -260,6 +260,14 @@ export async function coreJoin(data: {
   });
 
   if (!accessCode) throw new AppError('Invalid or revoked access code', 400, 'INVALID_CODE');
+  // if (!accessCode) throw new AppError('Invalid or revoked access code', 400, 'INVALID_CODE');
+
+  console.log('tenure_start:', accessCode.community.tenure_start);
+  console.log('tenure_end:', accessCode.community.tenure_end);
+  console.log('now:', new Date());
+  console.log('max_uses:', accessCode.max_uses, 'usage_count:', accessCode.usage_count);
+
+  // const now = new Date();
 
   const now = new Date();
   if (now < accessCode.community.tenure_start) {

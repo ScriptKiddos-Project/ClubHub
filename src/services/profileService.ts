@@ -12,34 +12,40 @@ const prisma = new PrismaClient();
 export async function getPointsHistory(userId: string, page = 1, limit = 20) {
   const skip = (page - 1) * limit;
 
-  const [history, total] = await Promise.all([
+  const [history, total, user] = await Promise.all([
     prisma.pointsHistory.findMany({
       where: { user_id: userId },
       orderBy: { created_at: 'desc' },
       skip,
       take: limit,
-      include: {
-        user: { select: { total_points: true, total_volunteer_hours: true } },
-      },
     }),
     prisma.pointsHistory.count({ where: { user_id: userId } }),
+    prisma.user.findUniqueOrThrow({
+      where: { id: userId },
+      select: { total_points: true, total_volunteer_hours: true },
+    }),
   ]);
 
   return {
-    history: history.map(h => ({
+    entries: history.map(h => ({
       id: h.id,
-      eventId: h.event_id,
-      points: h.points,
-      hours: h.hours,
-      reason: h.reason,
+      eventId: h.event_id ?? '',
+      eventTitle: h.reason,           // reason is the closest to a title
+      clubName: '',                   // not stored in points_history
+      basePoints: h.points / h.multiplier,
       multiplier: h.multiplier,
-      createdAt: h.created_at,
+      finalPoints: h.points,
+      volunteerHours: h.hours,
+      memberType: 'member' as const,  // not stored, default to member
+      earnedAt: h.created_at.toISOString(),
     })),
-    meta: {
-      total,
+    totalPoints: user.total_points,
+    totalHours: user.total_volunteer_hours,
+    pagination: {
       page,
       limit,
-      has_more: skip + history.length < total,
+      total,
+      totalPages: Math.ceil(total / limit),
     },
   };
 }

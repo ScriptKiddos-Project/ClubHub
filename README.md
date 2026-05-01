@@ -434,6 +434,7 @@ clubhub_fixed
 │  │  │  └─ virtual-table
 │  │  │     └─ Virtualtable.tsx
 │  │  ├─ hooks
+│  │  │  ├─ useAnalytics.ts
 │  │  │  ├─ useAuth.ts
 │  │  │  ├─ useChat.ts
 │  │  │  ├─ useClubs.ts
@@ -448,6 +449,7 @@ clubhub_fixed
 │  │  ├─ main.tsx
 │  │  ├─ pages
 │  │  │  ├─ admin
+│  │  │  │  ├─ AdminAnalyticsPage.tsx
 │  │  │  │  ├─ AdminDashboardPage.tsx
 │  │  │  │  ├─ AdminPhase2Page.tsx
 │  │  │  │  ├─ AnnouncementComposePage.tsx
@@ -467,6 +469,7 @@ clubhub_fixed
 │  │  │     ├─ AnalyticsPage.tsx
 │  │  │     ├─ AnnouncementsPage.tsx
 │  │  │     ├─ AttendancePage.tsx
+│  │  │     ├─ ClubAnalyticsPage.tsx
 │  │  │     ├─ ClubDetailPage.tsx
 │  │  │     ├─ ClubDetailPagePhase2.tsx
 │  │  │     ├─ ClubRankingsPage.tsx
@@ -484,6 +487,7 @@ clubhub_fixed
 │  │  │     ├─ ProfilePagePhase3.tsx
 │  │  │     └─ RecruitmentApplicationPage.tsx
 │  │  ├─ services
+│  │  │  ├─ analyticsService.ts
 │  │  │  ├─ api.ts
 │  │  │  ├─ authService.ts
 │  │  │  ├─ clubService.ts
@@ -530,12 +534,14 @@ clubhub_fixed
 │  │  ├─ redis.ts
 │  │  └─ socket.ts
 │  ├─ controllers
+│  │  ├─ adminController.ts
 │  │  ├─ analyticsController.ts
 │  │  ├─ attendanceController.ts
 │  │  ├─ authController.ts
 │  │  ├─ chatController.ts
 │  │  ├─ clubController.ts
 │  │  ├─ clubControllers.ts
+│  │  ├─ communityController.ts
 │  │  ├─ eventController.ts
 │  │  ├─ geoAttendanceController.ts
 │  │  ├─ notificationController.ts
@@ -543,7 +549,8 @@ clubhub_fixed
 │  │  ├─ profileController.ts
 │  │  ├─ rankingController.ts
 │  │  ├─ recruitmentController.ts
-│  │  └─ suggestionController.ts
+│  │  ├─ suggestionController.ts
+│  │  └─ userControllers.ts
 │  ├─ index-phase4-additions.ts
 │  ├─ index.ts
 │  ├─ jobs
@@ -578,12 +585,14 @@ clubhub_fixed
 │  │  └─ user.routes.ts
 │  ├─ server.ts
 │  ├─ services
+│  │  ├─ adminService.ts
 │  │  ├─ analyticsService.ts
 │  │  ├─ attendanceService.ts
 │  │  ├─ authService.ts
 │  │  ├─ certificateService.ts
 │  │  ├─ chatService.ts
 │  │  ├─ clubService.ts
+│  │  ├─ communityService.ts
 │  │  ├─ emailService.ts
 │  │  ├─ eventService.ts
 │  │  ├─ geoAttendanceService.ts
@@ -594,7 +603,8 @@ clubhub_fixed
 │  │  ├─ rankingService.ts
 │  │  ├─ recommendationService.ts
 │  │  ├─ recruitmentService.ts
-│  │  └─ suggestionService.ts
+│  │  ├─ suggestionService.ts
+│  │  └─ userService.ts
 │  ├─ types
 │  │  └─ index.ts
 │  ├─ utils

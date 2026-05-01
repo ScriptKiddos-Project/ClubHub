@@ -43,12 +43,7 @@ export const authService = {
     api.post<ApiResponse<{ message: string }>>('/auth/reset-password', payload),
 
   coreJoin: async (payload: CoreJoinPayload) => {
-    const response = await api.post<ApiResponse<{ user: User; accessToken: string }>>('/auth/core-join', {
-      name: payload.name,
-      email: payload.email,
-      club_id: payload.clubId,
-      access_code: payload.accessCode,
-    });
+  const response = await api.post<ApiResponse<{ user: User; accessToken: string }>>('/auth/core-join', payload);
     return {
       ...response,
       data: {

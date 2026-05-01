@@ -167,7 +167,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
   const isArchived = room.isArchived;
 
   return (
-    <div className="flex flex-col h-full min-h-0">
+    <div className="flex flex-col h-full w-full min-h-0">
       {/* Header */}
       <div className="h-14 bg-white border-b border-gray-100 flex items-center px-4 gap-3 shrink-0">
         <div className="w-9 h-9 rounded-xl bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold text-sm shrink-0">
